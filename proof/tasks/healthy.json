@@ -1,0 +1,68 @@
+{
+  "schema_version": 2,
+  "contract_version": 1,
+  "task_id": "PROOF-HEALTHY",
+  "title": "Verify a UI against the intended development API",
+  "planning": {
+    "size": "M",
+    "size_source": "inferred",
+    "confidence": "high"
+  },
+  "risk_flags": ["api-contract", "ui-behavior", "visual"],
+  "acceptance": [
+    {
+      "id": "AC-1",
+      "surface": "ui",
+      "behavior": "The UI loads and renders the nonce-derived profile returned by the declared development API."
+    }
+  ],
+  "checks": [
+    {
+      "id": "unit-profile-contract",
+      "criterion_ids": ["AC-1"],
+      "claim_scope": "The profile parser accepts the current UI contract and rejects the legacy API shape.",
+      "stage": "fast",
+      "command": "node --test proof/fixture/profile.test.mjs",
+      "required": true,
+      "artifacts": {}
+    },
+    {
+      "id": "ui-mocked",
+      "criterion_ids": ["AC-1"],
+      "claim_scope": "The browser renders the expected UI state when a controlled first-party response is supplied; it does not prove service compatibility.",
+      "stage": "ui",
+      "profile": "mocked-ui",
+      "command": "npx playwright test proof/fixture/tests/mock.spec.mjs --config=proof/fixture/playwright.config.mjs",
+      "expected_tests": ["mocked profile journey"],
+      "required": false,
+      "safe_for_live": false,
+      "artifacts": {
+        "attestation": true,
+        "test_integrity": true,
+        "screenshots_min": 1,
+        "visual_review": false
+      }
+    },
+    {
+      "id": "ui-mixed-real",
+      "criterion_ids": ["AC-1"],
+      "claim_scope": "The candidate UI consumed and visibly rendered the nonce-bound response from the declared shared development API deployment.",
+      "stage": "ui",
+      "profile": "mixed-dev",
+      "command": "npx playwright test proof/fixture/tests/real.spec.mjs --config=proof/fixture/playwright.config.mjs",
+      "expected_tests": ["real service profile journey"],
+      "business_request": { "method": "GET", "path": "/api/profile" },
+      "required": true,
+      "safe_for_live": false,
+      "artifacts": {
+        "attestation": true,
+        "test_integrity": true,
+        "business_flow_provenance": true,
+        "screenshots_min": 1,
+        "visual_review": true
+      }
+    }
+  ],
+  "approval_boundaries": [],
+  "evidence_expires_on": ["candidate-change", "contract-change", "profile-change", "harness-change", "deployment-change"]
+}

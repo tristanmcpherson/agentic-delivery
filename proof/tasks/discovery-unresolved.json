@@ -1,0 +1,46 @@
+{
+  "schema_version": 3,
+  "contract_version": 1,
+  "task_id": "PROOF-DISCOVERY-UNRESOLVED",
+  "title": "Reject unresolved material discovery",
+  "planning": { "size": "S", "size_source": "inferred", "confidence": "low" },
+  "intake": {
+    "status": "ready",
+    "research_mode": "direct",
+    "mode_reason": "The agent attempted direct research.",
+    "capabilities": { "subagents": "available", "goal": "authorized" },
+    "questions": [
+      {
+        "id": "RQ-MATERIAL",
+        "question": "Which incompatible product behavior should be selected?",
+        "material": true,
+        "status": "deferred",
+        "conclusion": "The choice remains unresolved.",
+        "confidence": "low",
+        "evidence_refs": ["user:material-choice-not-provided"]
+      }
+    ],
+    "scouts": [],
+    "conflicts": [],
+    "assumptions": [],
+    "unresolved_material": ["Choose the required product behavior."],
+    "synthesis": {
+      "outcome": "One product behavior is selected and implemented.",
+      "requirements": ["Resolve the material choice."],
+      "constraints": [],
+      "non_goals": [],
+      "risk_flags": ["logic"],
+      "acceptance_ids": ["AC-1"]
+    }
+  },
+  "goal_spec": {
+    "objective": "One product behavior is selected and implemented.",
+    "acceptance_ids": ["AC-1"],
+    "completion_target": "locally-verified",
+    "persistence": "goal-tool",
+    "mechanism": "create_goal"
+  },
+  "risk_flags": ["logic"],
+  "acceptance": [{ "id": "AC-1", "surface": "logic", "behavior": "The selected behavior is observable." }],
+  "checks": [{ "id": "logic", "criterion_ids": ["AC-1"], "claim_scope": "Selected logic.", "stage": "fast", "command": "node --test proof/fixture/profile.test.mjs", "required": true, "artifacts": {} }]
+}

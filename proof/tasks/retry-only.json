@@ -1,0 +1,23 @@
+{
+  "schema_version": 2,
+  "contract_version": 1,
+  "task_id": "PROOF-RETRY-ONLY",
+  "title": "Reject retry-only success",
+  "planning": { "size": "S", "size_source": "inferred", "confidence": "high" },
+  "risk_flags": ["api-contract", "ui-behavior"],
+  "acceptance": [{ "id": "AC-1", "surface": "ui", "behavior": "The required journey passes cleanly on its first attempt." }],
+  "checks": [{
+    "id": "retry-only",
+    "criterion_ids": ["AC-1"],
+    "claim_scope": "The shared-service browser journey is deterministic on its first attempt.",
+    "stage": "ui",
+    "profile": "mixed-dev",
+    "command": "npx playwright test proof/fixture/tests/flaky-real.spec.mjs --config=proof/fixture/playwright.config.mjs",
+    "expected_tests": ["flaky real service journey"],
+    "business_request": { "method": "GET", "path": "/api/profile" },
+    "required": true,
+    "artifacts": { "attestation": true, "test_integrity": true, "business_flow_provenance": true }
+  }],
+  "approval_boundaries": [],
+  "evidence_expires_on": ["candidate-change", "contract-change", "profile-change", "harness-change", "deployment-change"]
+}

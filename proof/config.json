@@ -1,0 +1,143 @@
+{
+  "schema_version": 2,
+  "authority": {
+    "mode": "local"
+  },
+  "evidence_root": "proof/evidence",
+  "defaults": {
+    "check_timeout_ms": 120000,
+    "max_log_bytes": 2000000
+  },
+  "quality": {
+    "fail_on_console_errors": true,
+    "fail_on_page_errors": true,
+    "fail_on_failed_requests": true,
+    "ignore_console_patterns": [],
+    "ignore_request_patterns": []
+  },
+  "profiles": {
+    "mocked-ui": {
+      "kind": "mocked",
+      "app_origin": "http://127.0.0.1:46200",
+      "api_origin": "http://127.0.0.1:46201",
+      "mock_policy": "allow-first-party",
+      "data_mode": "fixtures",
+      "auth_mode": "none",
+      "env": {
+        "FIXTURE_START_API": "false",
+        "FIXTURE_START_UI": "true"
+      }
+    },
+    "local-broken": {
+      "kind": "local-real",
+      "app_origin": "http://127.0.0.1:46200",
+      "api_origin": "http://127.0.0.1:46201",
+      "mock_policy": "forbid-first-party",
+      "data_mode": "seeded-local",
+      "auth_mode": "none",
+      "marker": {
+        "header": "x-agentic-environment",
+        "value": "broken-local"
+      },
+      "provenance": {
+        "correlation_url": "http://127.0.0.1:46201/__agentic/correlation?run_id=${AGENTIC_RUN_NONCE}",
+        "deployment_id": "broken-local-fixture-v1"
+      },
+      "env": {
+        "FIXTURE_START_API": "true",
+        "FIXTURE_START_UI": "true",
+        "FIXTURE_API_MODE": "broken"
+      }
+    },
+    "mixed-dev": {
+      "kind": "mixed",
+      "app_origin": "http://127.0.0.1:46203",
+      "api_origin": "http://127.0.0.1:46202",
+      "mock_policy": "forbid-first-party",
+      "data_mode": "shared-dev-seed",
+      "auth_mode": "none",
+      "marker": {
+        "header": "x-agentic-environment",
+        "value": "development"
+      },
+      "provenance": {
+        "correlation_url": "http://127.0.0.1:46202/__agentic/correlation?run_id=${AGENTIC_RUN_NONCE}",
+        "deployment_id": "development-fixture-v1"
+      },
+      "probes": [
+        {
+          "name": "development API",
+          "url": "http://127.0.0.1:46202/health",
+          "status": 200,
+          "expect_headers": {
+            "x-agentic-environment": "development"
+          },
+          "expect_json": {
+            "status": "ok",
+            "environment": "development"
+          }
+        }
+      ],
+      "env": {
+        "FIXTURE_START_API": "false",
+        "FIXTURE_START_UI": "true"
+      }
+    },
+    "spoofed-shared": {
+      "kind": "mixed",
+      "app_origin": "http://127.0.0.1:46207",
+      "api_origin": "http://127.0.0.1:46206",
+      "mock_policy": "forbid-first-party",
+      "data_mode": "shared-dev-seed",
+      "auth_mode": "none",
+      "marker": { "header": "x-agentic-environment", "value": "development" },
+      "provenance": {
+        "correlation_url": "http://127.0.0.1:46206/__agentic/correlation?run_id=${AGENTIC_RUN_NONCE}",
+        "deployment_id": "development-fixture-v1"
+      },
+      "probes": [{
+        "name": "marker-spoof service",
+        "url": "http://127.0.0.1:46206/health",
+        "status": 200,
+        "expect_headers": { "x-agentic-environment": "development" }
+      }]
+    },
+    "production-sim": {
+      "kind": "production",
+      "app_origin": "http://127.0.0.1:46205",
+      "api_origin": "http://127.0.0.1:46204",
+      "mock_policy": "forbid-first-party",
+      "data_mode": "synthetic-safe",
+      "auth_mode": "none",
+      "external": true,
+      "requires_approval": true,
+      "marker": {
+        "header": "x-agentic-environment",
+        "value": "production"
+      },
+      "provenance": {
+        "correlation_url": "http://127.0.0.1:46204/__agentic/correlation?run_id=${AGENTIC_RUN_NONCE}",
+        "deployment_id": "production-fixture-v1"
+      },
+      "probes": [
+        {
+          "name": "deployed UI",
+          "url": "http://127.0.0.1:46205/health",
+          "status": 200
+        },
+        {
+          "name": "production API",
+          "url": "http://127.0.0.1:46204/health",
+          "status": 200,
+          "expect_headers": {
+            "x-agentic-environment": "production"
+          }
+        }
+      ],
+      "env": {
+        "FIXTURE_START_API": "false",
+        "FIXTURE_START_UI": "false"
+      }
+    }
+  }
+}

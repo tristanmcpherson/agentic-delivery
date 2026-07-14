@@ -1,0 +1,78 @@
+{
+  "schema_version": 3,
+  "contract_version": 1,
+  "task_id": "PROOF-DISCOVERY-HEALTHY",
+  "title": "Produce a contract-bound profile parser result",
+  "planning": { "size": "S", "size_source": "inferred", "confidence": "high" },
+  "intake": {
+    "status": "ready",
+    "research_mode": "scouted",
+    "mode_reason": "Repository behavior and proof requirements were independent bounded questions.",
+    "capabilities": { "subagents": "available", "goal": "authorized" },
+    "questions": [
+      {
+        "id": "RQ-BEHAVIOR",
+        "question": "Where is the profile parser behavior defined?",
+        "material": true,
+        "status": "resolved",
+        "conclusion": "The profile fixture and focused test define the parser behavior.",
+        "confidence": "high",
+        "evidence_refs": ["repo:proof/fixture/profile.test.mjs:1"]
+      },
+      {
+        "id": "RQ-PROOF",
+        "question": "Which focused check proves the requested logic?",
+        "material": true,
+        "status": "resolved",
+        "conclusion": "The focused Node test proves the parser contract without external services.",
+        "confidence": "high",
+        "evidence_refs": ["repo:proof/fixture/profile.test.mjs:1"]
+      }
+    ],
+    "scouts": [
+      {
+        "id": "profile-scout",
+        "question_ids": ["RQ-BEHAVIOR", "RQ-PROOF"],
+        "scope": "read-only",
+        "status": "complete",
+        "summary": "Located the parser and its focused acceptance check.",
+        "evidence_refs": ["repo:proof/fixture/profile.test.mjs:1"]
+      }
+    ],
+    "conflicts": [],
+    "assumptions": [],
+    "unresolved_material": [],
+    "synthesis": {
+      "outcome": "The profile parser returns the declared display value.",
+      "requirements": ["Preserve the focused parser contract."],
+      "constraints": ["Keep the check deterministic and local."],
+      "non_goals": ["Exercise browser or service behavior."],
+      "risk_flags": ["logic"],
+      "acceptance_ids": ["AC-PARSER"]
+    }
+  },
+  "goal_spec": {
+    "objective": "The profile parser returns the declared display value.",
+    "acceptance_ids": ["AC-PARSER"],
+    "completion_target": "locally-verified",
+    "persistence": "goal-tool",
+    "mechanism": "create_goal"
+  },
+  "risk_flags": ["logic"],
+  "acceptance": [
+    { "id": "AC-PARSER", "surface": "logic", "behavior": "The parser returns the declared display value." }
+  ],
+  "checks": [
+    {
+      "id": "profile-parser",
+      "criterion_ids": ["AC-PARSER"],
+      "claim_scope": "Focused profile parser behavior.",
+      "stage": "fast",
+      "command": "node --test proof/fixture/profile.test.mjs",
+      "required": true,
+      "artifacts": {}
+    }
+  ],
+  "approval_boundaries": [],
+  "evidence_expires_on": ["candidate-change", "contract-change", "harness-change"]
+}

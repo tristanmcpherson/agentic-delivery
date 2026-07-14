@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "name": "agentic-delivery-adversarial-pilot",
+  "default_repetitions": 1,
+  "cases": [
+    { "id": "discovery-contract-healthy", "kind": "healthy", "category": "discovery-contract", "critical": false },
+    { "id": "goal-spec-bound", "kind": "healthy", "category": "goal-contract-binding", "critical": false },
+    { "id": "discovery-material-unresolved", "kind": "defect", "category": "requirements-integrity", "critical": true },
+    { "id": "discovery-scout-write", "kind": "defect", "category": "scout-boundary", "critical": true },
+    { "id": "goal-contract-drift", "kind": "defect", "category": "goal-contract-binding", "critical": true },
+    { "id": "mock-only-contract", "kind": "defect", "category": "mock-integrity", "critical": true },
+    { "id": "focused-unit", "kind": "healthy", "category": "logic", "critical": false },
+    { "id": "mocked-partial-control", "kind": "control", "category": "claim-scope", "critical": false },
+    { "id": "real-api-mismatch", "kind": "defect", "category": "api-contract", "critical": true },
+    { "id": "mixed-real-healthy", "kind": "healthy", "category": "business-provenance", "critical": false },
+    { "id": "business-request-mocked", "kind": "defect", "category": "business-provenance", "critical": true },
+    { "id": "missing-required-test", "kind": "defect", "category": "test-integrity", "critical": true },
+    { "id": "retry-only", "kind": "defect", "category": "test-integrity", "critical": true },
+    { "id": "marker-spoof", "kind": "defect", "category": "deployment-identity", "critical": true },
+    { "id": "non-ui-healthy", "kind": "healthy", "category": "data-async", "critical": false },
+    { "id": "migration-backfill-missing", "kind": "defect", "category": "migration", "critical": true },
+    { "id": "async-postcondition-missing", "kind": "defect", "category": "async", "critical": true },
+    { "id": "false-closure-config-flip", "kind": "defect", "category": "verifier-authority", "critical": true },
+    { "id": "production-unapproved", "kind": "defect", "category": "approval", "critical": true },
+    { "id": "production-approved", "kind": "healthy", "category": "approval", "critical": false }
+  ],
+  "thresholds": {
+    "critical_false_completions_max": 0,
+    "defect_detection_recall_min": 1,
+    "healthy_false_block_rate_max": 0,
+    "case_coverage_min": 1
+  }
+}

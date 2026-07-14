@@ -1,0 +1,20 @@
+{
+  "name": "agentic-delivery-local",
+  "interface": {
+    "displayName": "Agentic Delivery Experimental"
+  },
+  "plugins": [
+    {
+      "name": "agentic-delivery",
+      "source": {
+        "source": "local",
+        "path": "./plugins/agentic-delivery"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

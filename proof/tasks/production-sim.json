@@ -1,0 +1,34 @@
+{
+  "schema_version": 2,
+  "contract_version": 1,
+  "task_id": "PROOF-PRODUCTION",
+  "title": "Run an approval-gated production smoke",
+  "planning": { "size": "S", "size_source": "inferred", "confidence": "high" },
+  "risk_flags": ["api-contract", "ui-behavior", "visual", "deployment"],
+  "acceptance": [
+    { "id": "AC-1", "surface": "ui", "behavior": "The deployed UI renders the nonce-derived safe synthetic profile from the production service." }
+  ],
+  "checks": [
+    {
+      "id": "production-smoke",
+      "criterion_ids": ["AC-1"],
+      "claim_scope": "The deployed UI consumes the nonce-bound safe response from the approved production deployment.",
+      "stage": "post-deploy",
+      "profile": "production-sim",
+      "command": "npx playwright test proof/fixture/tests/real.spec.mjs --config=proof/fixture/playwright.config.mjs",
+      "expected_tests": ["real service profile journey"],
+      "business_request": { "method": "GET", "path": "/api/profile" },
+      "required": true,
+      "safe_for_live": true,
+      "artifacts": {
+        "attestation": true,
+        "test_integrity": true,
+        "business_flow_provenance": true,
+        "screenshots_min": 1,
+        "visual_review": true
+      }
+    }
+  ],
+  "approval_boundaries": ["protected-production-environment"],
+  "evidence_expires_on": ["candidate-change", "contract-change", "profile-change", "harness-change", "deployment-change"]
+}

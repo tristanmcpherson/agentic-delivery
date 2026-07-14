@@ -1,0 +1,44 @@
+{
+  "schema_version": 2,
+  "contract_version": 1,
+  "task_id": "PROOF-NON-UI",
+  "title": "Verify migration and asynchronous worker behavior",
+  "planning": { "size": "M", "size_source": "inferred", "confidence": "high" },
+  "risk_flags": ["persistence", "migration", "async"],
+  "acceptance": [
+    { "id": "AC-DATA", "surface": "data", "behavior": "Migration 002 updates the real SQLite schema, preserves profile data, and has a compatible rollback." },
+    { "id": "AC-ASYNC", "surface": "async", "behavior": "The worker consumes the nonce-correlated event and exposes the expected eventual projection." }
+  ],
+  "checks": [
+    {
+      "id": "sqlite-migration",
+      "criterion_ids": ["AC-DATA"],
+      "claim_scope": "Migration 002 applies and rolls back against an ephemeral real SQLite database while preserving the seeded profile.",
+      "stage": "integration",
+      "command": "node --no-warnings proof/fixture/non-ui/migration-check.mjs",
+      "required": true,
+      "artifacts": {
+        "system_attestation": {
+          "kind": "migration",
+          "required_assertions": ["migration-applied", "schema-current", "data-preserved", "rollback-compatible"]
+        }
+      }
+    },
+    {
+      "id": "async-projection",
+      "criterion_ids": ["AC-ASYNC"],
+      "claim_scope": "A separate worker process consumes the queued event, preserves correlation, and writes the eventual profile projection.",
+      "stage": "integration",
+      "command": "node proof/fixture/non-ui/async-check.mjs",
+      "required": true,
+      "artifacts": {
+        "system_attestation": {
+          "kind": "async",
+          "required_assertions": ["event-enqueued", "worker-consumed", "correlation-matched", "postcondition-observed"]
+        }
+      }
+    }
+  ],
+  "approval_boundaries": [],
+  "evidence_expires_on": ["candidate-change", "contract-change", "profile-change", "harness-change", "runtime-change"]
+}

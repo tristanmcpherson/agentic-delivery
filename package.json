@@ -1,0 +1,23 @@
+{
+  "name": "agentic-delivery-framework",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Portable Codex plugin and proof harness for evidence-driven agentic software delivery.",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "test:harness": "node --test tests/harness.test.mjs",
+    "proof": "node proof/run-proof.mjs",
+    "proof:finalize": "node proof/finalize-proof.mjs",
+    "portability": "node scripts/portability-smoke.mjs",
+    "evaluate:pilot": "node scripts/run-evaluation.mjs",
+    "evaluate:pilot:current": "node scripts/run-evaluation.mjs --use-report proof/mechanical-report.json",
+    "game": "node game/server.mjs",
+    "game:test": "node --test tests/game-engine.test.mjs && npm run game:test:browser",
+    "game:test:browser": "playwright test game/tests/game.spec.mjs --config=game/playwright.config.mjs",
+    "validate": "npm run test && npm run portability && npm run proof"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1"
+  }
+}

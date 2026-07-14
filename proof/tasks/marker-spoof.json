@@ -1,0 +1,23 @@
+{
+  "schema_version": 2,
+  "contract_version": 1,
+  "task_id": "PROOF-MARKER-SPOOF",
+  "title": "Reject a service that copies the environment marker",
+  "planning": { "size": "S", "size_source": "inferred", "confidence": "high" },
+  "risk_flags": ["api-contract", "ui-behavior", "deployment"],
+  "acceptance": [{ "id": "AC-1", "surface": "ui", "behavior": "The UI consumes the protected shared API deployment." }],
+  "checks": [{
+    "id": "marker-spoof",
+    "criterion_ids": ["AC-1"],
+    "claim_scope": "The browser business response comes from the protected shared deployment, not a marker-spoofing service.",
+    "stage": "ui",
+    "profile": "spoofed-shared",
+    "command": "npx playwright test proof/fixture/tests/real.spec.mjs --config=proof/fixture/playwright.config.mjs",
+    "expected_tests": ["real service profile journey"],
+    "business_request": { "method": "GET", "path": "/api/profile" },
+    "required": true,
+    "artifacts": { "attestation": true, "test_integrity": true, "business_flow_provenance": true }
+  }],
+  "approval_boundaries": [],
+  "evidence_expires_on": ["candidate-change", "contract-change", "profile-change", "harness-change", "deployment-change"]
+}

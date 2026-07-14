@@ -1,0 +1,29 @@
+{
+  "schema_version": 2,
+  "contract_version": 1,
+  "task_id": "PROOF-ASYNC-BROKEN",
+  "title": "Reject an acknowledged event with the wrong correlation and no postcondition",
+  "planning": { "size": "S", "size_source": "inferred", "confidence": "high" },
+  "risk_flags": ["async"],
+  "acceptance": [
+    { "id": "AC-ASYNC", "surface": "async", "behavior": "The worker preserves the event correlation and writes the expected projection." }
+  ],
+  "checks": [
+    {
+      "id": "async-broken",
+      "criterion_ids": ["AC-ASYNC"],
+      "claim_scope": "Worker acknowledgement is insufficient without matching correlation and an observed server-side postcondition.",
+      "stage": "integration",
+      "command": "node proof/fixture/non-ui/async-check.mjs --broken",
+      "required": true,
+      "artifacts": {
+        "system_attestation": {
+          "kind": "async",
+          "required_assertions": ["event-enqueued", "worker-consumed", "correlation-matched", "postcondition-observed"]
+        }
+      }
+    }
+  ],
+  "approval_boundaries": [],
+  "evidence_expires_on": ["candidate-change", "contract-change", "harness-change", "runtime-change"]
+}

@@ -1,0 +1,26 @@
+{
+  "name": "agentic-delivery",
+  "version": "0.2.0+codex.20260714064020",
+  "description": "Research, goal-set, build, independently verify, and deliver engineering work with acceptance-linked evidence.",
+  "author": {
+    "name": "Tristan"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Agentic Delivery",
+    "shortDescription": "Research-first delivery with persistent goals and evidence.",
+    "longDescription": "A portable Codex workflow for calibrated read-only discovery, contract-bound persistent goals, Beads-backed execution, risk-selected verification, real-service browser checks when relevant, independent evidence, and protected delivery adapters.",
+    "developerName": "Tristan",
+    "category": "Productivity",
+    "capabilities": [
+      "Calibrated task planning",
+      "Read-only scout research",
+      "Contract-bound persistent goals",
+      "Beads integration",
+      "Independent verification evidence",
+      "Risk-selected diagnostics"
+    ],
+    "defaultPrompt": "Use $agentic-delivery to research this request first with calibrated read-only scouts when useful, freeze the evidence-backed contract, create the persistent goal with the available goal mechanism, and continue until its verified completion target is reached."
+  },
+  "mcpServers": "./.mcp.json"
+}

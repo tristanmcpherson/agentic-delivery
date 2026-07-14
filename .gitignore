@@ -1,0 +1,24 @@
+node_modules/
+.uv-cache/
+.npm-cache/
+.playwright-browsers/
+test-results/
+playwright-report/
+.agentic/evidence/
+artifacts/
+proof/evidence/
+proof/last-proof.json
+proof/mechanical-report.json
+proof/direct-artifacts/
+proof/direct-attestations/
+proof/install-targets/
+dist/
+evaluation/results/
+*.zip
+*.tar.gz
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
+.beads/proxieddb/

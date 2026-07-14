@@ -1,0 +1,32 @@
+{
+  "schema_version": 2,
+  "contract_version": 1,
+  "task_id": "PROOF-MOCK-ONLY",
+  "title": "Reject mock-only UI completion",
+  "planning": { "size": "S", "size_source": "inferred", "confidence": "high" },
+  "risk_flags": ["api-contract", "ui-behavior"],
+  "acceptance": [
+    { "id": "AC-1", "surface": "ui", "behavior": "The UI renders the first-party profile service result." }
+  ],
+  "checks": [
+    {
+      "id": "ui-mocked",
+      "criterion_ids": ["AC-1"],
+      "claim_scope": "The browser renders a controlled mocked response only.",
+      "stage": "ui",
+      "profile": "mocked-ui",
+      "command": "npx playwright test proof/fixture/tests/mock.spec.mjs --config=proof/fixture/playwright.config.mjs",
+      "expected_tests": ["mocked profile journey"],
+      "required": true,
+      "safe_for_live": false,
+      "artifacts": {
+        "attestation": true,
+        "test_integrity": true,
+        "screenshots_min": 1,
+        "visual_review": false
+      }
+    }
+  ],
+  "approval_boundaries": [],
+  "evidence_expires_on": ["candidate-change", "contract-change", "profile-change", "harness-change"]
+}

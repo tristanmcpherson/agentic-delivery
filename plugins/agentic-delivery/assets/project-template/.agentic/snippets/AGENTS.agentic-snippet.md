@@ -1,0 +1,7 @@
+## Agentic delivery
+
+Use `$agentic-delivery` for calibrated pre-goal discovery, bounded implementation, risk-selected verification, diagnosis, and delivery. For new contracted work, research first, use bounded read-only scouts only for independent unknowns, synthesize and resolve material choices, freeze the contract, then create the persistent goal using the available authorized mechanism. Resume existing goals/contracts without duplicating them. Use Beads for durable work state, dependencies, decisions, and verifier evidence references; Beads is not the verification authority.
+
+The machine contract is `.agentic/tasks/<bead-id>.json`. New contracts use schema 3 with ready `intake` and a complete `goal_spec`; existing schema-2 contracts remain compatible. Task size controls planning persistence only; direct risk flags select gates. Generate the exact goal objective with `node .agentic/bin/agentic-harness.mjs goal-spec --task <bead-id>`. Run `node .agentic/bin/agentic-harness.mjs status --task <bead-id>` before reporting completion. State the honest level: implemented-not-verified, locally-verified, closure-verified, or delivered-and-verified.
+
+Any criterion that depends on first-party service behavior requires a real first-party check. Material visual changes require exact-image structured review. A protected verifier/CI lane—not the builder or Bead state—issues closure-grade evidence.

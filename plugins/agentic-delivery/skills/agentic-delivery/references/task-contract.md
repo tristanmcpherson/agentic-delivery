@@ -1,0 +1,26 @@
+# Task contract
+
+The contract is small, versioned, and many-to-many. Use `assets/task-contract.example.json` as a starting point. Create new contracts with schema 3; the harness continues to accept schema 2 so existing work can be resumed without rewriting its evidence identity.
+
+Schema 3 adds two orchestration records:
+
+- `intake` stores stable research conclusions, evidence references, capability state, bounded read-only scout summaries, resolved conflicts, reversible non-material assumptions, and the synthesized requirements/risk/acceptance set. It must be `ready` with no unresolved material decision before checks or verifier grants can run.
+- `goal_spec` stores the exact synthesized outcome, complete acceptance-ID set, honest completion target, persistence mode, and available goal mechanism. `goal_spec.objective` must equal `intake.synthesis.outcome`; the harness adds task/version/acceptance metadata. Generate the exact tool objective with `agentic-harness goal-spec`; do not manually paraphrase it after the contract is frozen.
+
+Store summaries, not scout transcripts or raw logs. These fields are self-reported orchestration state: structural validation cannot prove that a model actually delegated, stayed read-only, or called a goal tool in the claimed order. Evaluate those behaviors from model traces and before/after workspace state.
+
+Each check declares:
+
+- `criterion_ids`: claims it supports;
+- `claim_scope`: what passing actually proves;
+- `stage`: fast, integration, UI, or post-deploy;
+- `profile`: environment capabilities when applicable;
+- `required`: whether closure depends on it;
+- `artifacts`: browser attestation, test-integrity, screenshot, visual-review, business provenance, and system-attestation requirements.
+
+For `persistence`, `migration`, or `async` risk, use `artifacts.system_attestation` with a `kind` and exact `required_assertions`. The adapter output must bind its task/check, run nonce and correlation, typed subject, operation hashes, and each required assertion's evidence hash.
+
+Task size controls plan persistence only. Risk flags select gates. Approval is determined by the action, target, credentials, and side effects.
+
+A material contract change increments `contract_version`, records the amendment reason, and invalidates evidence issued for prior versions.
+If the change alters the observable intent, acceptance set, or requested completion target, pause and reconcile the persistent goal instead of allowing it to diverge from the amended contract.
