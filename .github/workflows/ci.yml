@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     env:
-      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/agentic-playwright
+      PLAYWRIGHT_BROWSERS_PATH: .playwright-browsers
     strategy:
       fail-fast: false
       matrix:
