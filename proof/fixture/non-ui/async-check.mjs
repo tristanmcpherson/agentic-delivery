@@ -39,8 +39,12 @@ const workerFile = path.join(path.dirname(fileURLToPath(import.meta.url)), "asyn
 const child = spawn(process.execPath, [workerFile, inputFile, outputFile, mode], { windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
 let stderr = "";
 child.stderr.on("data", (chunk) => { stderr += chunk.toString(); });
+const childExit = new Promise((resolve, reject) => {
+  child.once("error", reject);
+  child.once("close", (code) => resolve(code ?? -1));
+});
 const result = await waitForOutput(outputFile);
-const exitCode = await new Promise((resolve) => child.on("close", (code) => resolve(code ?? -1)));
+const exitCode = await childExit;
 const consumed = exitCode === 0 && result !== null;
 const correlated = result?.correlation_id === nonce && result?.message_id === event.message_id;
 const postcondition = result?.status === "processed" && result?.projection?.profile_id === event.payload.profile_id && result?.projection?.indexed === true;

@@ -1240,7 +1240,21 @@ export async function main(argv = process.argv.slice(2)) {
   throw new Error(`Unknown command: ${command}`);
 }
 
-const isEntrypoint = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+function comparablePath(filePath) {
+  const resolved = path.resolve(filePath);
+  return process.platform === "win32" ? resolved.toLowerCase() : resolved;
+}
+
+async function sameFile(left, right) {
+  try {
+    const [realLeft, realRight] = await Promise.all([fs.realpath(left), fs.realpath(right)]);
+    return comparablePath(realLeft) === comparablePath(realRight);
+  } catch {
+    return comparablePath(left) === comparablePath(right);
+  }
+}
+
+const isEntrypoint = process.argv[1] && await sameFile(process.argv[1], fileURLToPath(import.meta.url));
 if (isEntrypoint) {
   main().catch((error) => {
     console.error(`ERROR: ${error.message}`);
