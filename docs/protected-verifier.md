@@ -55,6 +55,24 @@ The verifier executes the frozen candidate:
 node agentic-harness.mjs run --root <candidate> --config <config> --task <task> --verifier-grant <grant.json>
 ```
 
+## Distinct delivery controller
+
+Do not reuse the verifier key or infer delivery from closure. After the protected verifier reports current `closure-verified` evidence and the protected deployment/post-deploy jobs have observed the exact deployment identity, prepare a delivery request:
+
+```text
+node agentic-harness.mjs delivery-request --root <candidate> --config <config> --task <task> --target <allowlisted-target> --deployment-id <observed-id> --approval-id <id> --approved-by <actor> --approved-at <timestamp> --output <delivery-request.json>
+```
+
+A separately protected delivery-controller job validates those fields and signs without running candidate code:
+
+```text
+node sign-delivery-attestation.mjs --request <delivery-request.json> --output <delivery-attestation.json> --expected-candidate <sha> --expected-target <target> --expected-deployment-id <id> --expected-approval-id <id> --expected-controller-id <id> --expected-issuer <issuer>
+```
+
+Record the signed result with `delivery-record`. The harness revalidates the current closure hash, candidate, target, deployment, approval, every required protected post-deploy result, controller identity, expiry, signature, and distinct verifier/delivery key fingerprints before reporting `delivered-and-verified`.
+
+Configure the delivery controller under a different protected environment and key than `agentic-closure`. The repository contains binding and signer mechanics only; it does not provision that environment or authorize a production action.
+
 ## Honest boundary
 
-The local proof generates a key pair only to demonstrate that an unsigned config flip fails and that signature/binding mechanics work. It is not protected-CI evidence. The included workflow becomes a closure authority only after the repository actually provisions and protects its environment, key, controller revision, candidate checkout, profiles, and credentials. Real OIDC-backed keyless signing, tenant isolation, platform attestations, and delivery adapters remain evaluation work.
+The local proof generates key pairs only to demonstrate that unsigned config flips fail, closure and delivery bindings work, and one key cannot stand in for both principals. It is not protected-CI or production-delivery evidence. The included workflow becomes a closure authority only after the repository actually provisions and protects its environment, key, controller revision, candidate checkout, profiles, and credentials. The repository does not include a live delivery workflow. Real OIDC-backed keyless signing, tenant isolation, platform attestations, and deployment adapters remain evaluation work.

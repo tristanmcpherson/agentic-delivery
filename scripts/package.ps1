@@ -5,10 +5,15 @@ param(
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
 $dist = Join-Path $root 'dist'
-$staging = Join-Path $dist '.staging-agentic-delivery'
+$staging = Join-Path $dist '.staging-vision'
+$package = Get-Content -Raw -LiteralPath (Join-Path $root 'package.json') | ConvertFrom-Json
+$version = [string]$package.version
+if (-not $version) {
+  throw 'package.json must declare a version.'
+}
 
 if (-not $OutputPath) {
-  $OutputPath = Join-Path $dist 'agentic-delivery-v0.2.0.zip'
+  $OutputPath = Join-Path $dist "vision-v$version.zip"
 }
 $output = [IO.Path]::GetFullPath($OutputPath)
 $stagingFull = [IO.Path]::GetFullPath($staging)
@@ -23,7 +28,8 @@ $includes = @(
   'AGENTS.md',
   'README.md',
   'docs',
-  'evaluation\pilot-manifest.json',
+  'evaluation',
+  'game',
   'marketplace.json',
   'package.json',
   'package-lock.json',
@@ -34,9 +40,8 @@ $includes = @(
   'proof\run-proof.mjs',
   'proof\finalize-proof.mjs',
   'scripts',
-  'tests\evaluation.test.mjs',
-  'tests\harness.test.mjs',
-  'tests\verifier.test.mjs'
+  'test',
+  'tests'
 )
 
 New-Item -ItemType Directory -Force -Path $dist | Out-Null
@@ -51,6 +56,10 @@ try {
     $destination = Join-Path $stagingFull $relative
     New-Item -ItemType Directory -Force -Path (Split-Path -Parent $destination) | Out-Null
     Copy-Item -Recurse -Force -LiteralPath $source -Destination $destination
+  }
+  $privateHandoff = Join-Path $stagingFull 'docs\work-environment-handoff.md'
+  if (Test-Path -LiteralPath $privateHandoff) {
+    Remove-Item -Force -LiteralPath $privateHandoff
   }
   if (Test-Path -LiteralPath $output) {
     Remove-Item -Force -LiteralPath $output

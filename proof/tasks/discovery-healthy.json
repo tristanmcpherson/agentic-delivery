@@ -58,6 +58,7 @@
     "persistence": "goal-tool",
     "mechanism": "create_goal"
   },
+  "risk_gate_version": 1,
   "risk_flags": ["logic"],
   "acceptance": [
     { "id": "AC-PARSER", "surface": "logic", "behavior": "The parser returns the declared display value." }
@@ -70,6 +71,7 @@
       "stage": "fast",
       "command": "node --test proof/fixture/profile.test.mjs",
       "required": true,
+      "risk_flags": ["logic"],
       "artifacts": {}
     }
   ],

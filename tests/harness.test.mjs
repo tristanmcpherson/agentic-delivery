@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildGoalSpec, validateTask } from "../plugins/agentic-delivery/scripts/agentic-harness.mjs";
+import { buildGoalSpec, validateTask } from "../plugins/vision/scripts/agentic-harness.mjs";
 
 const config = {
   profiles: {

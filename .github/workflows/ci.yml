@@ -1,4 +1,4 @@
-name: Agentic Delivery CI
+name: Vision CI
 
 on:
   push:

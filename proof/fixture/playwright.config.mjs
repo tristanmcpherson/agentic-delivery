@@ -7,13 +7,14 @@ export default defineConfig({
   testDir: "./tests",
   timeout: 30_000,
   retries: 1,
-  reporter: [["line"], [path.resolve("plugins/agentic-delivery/assets/playwright/agentic-reporter.mjs")]],
+  reporter: [["line"], [path.resolve("plugins/vision/assets/playwright/agentic-reporter.mjs")]],
   forbidOnly: true,
   use: {
     baseURL: appOrigin,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
-    video: "retain-on-failure"
+    video: "retain-on-failure",
+    launchOptions: { args: ["--disable-gpu"] }
   },
   projects: [{ name: "chromium", use: { browserName: "chromium" } }]
 });

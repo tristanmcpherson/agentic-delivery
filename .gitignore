@@ -4,7 +4,7 @@ node_modules/
 .playwright-browsers/
 test-results/
 playwright-report/
-.agentic/evidence/
+/.agentic/
 artifacts/
 proof/evidence/
 proof/last-proof.json
@@ -16,6 +16,9 @@ dist/
 evaluation/results/
 *.zip
 *.tar.gz
+
+# Private local continuation material; never publish.
+/docs/work-environment-handoff.md
 
 # Beads / Dolt files (added by bd init)
 .dolt/

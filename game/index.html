@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#070a12" />
+    <title>Pulse Runner</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Pulse Runner home">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span><b>PULSE</b> RUNNER</span>
+        </a>
+        <div class="eyebrow"><span></span> SYSTEM ONLINE</div>
+      </header>
+
+      <section class="game-card" aria-labelledby="game-title">
+        <div class="hud">
+          <div class="hud-cell score-cell">
+            <span class="hud-label">SCORE</span>
+            <strong id="score">000000</strong>
+          </div>
+          <div class="energy-cell">
+            <div class="energy-copy"><span class="hud-label">CORE ENERGY</span><strong id="energy-value">100%</strong></div>
+            <div class="energy-track"><span id="energy-bar"></span></div>
+          </div>
+          <div class="hud-cell combo-cell">
+            <span class="hud-label">CHAIN</span>
+            <strong id="combo">×0</strong>
+          </div>
+        </div>
+
+        <div class="stage" id="stage">
+          <canvas id="game" width="960" height="600" role="img" aria-label="Pulse Runner game field. Steer left and right, collect cyan pulses, and avoid coral hazards."></canvas>
+          <div class="scanlines" aria-hidden="true"></div>
+
+          <div class="overlay intro" id="intro">
+            <p class="kicker">SECTOR 07 // NIGHT SHIFT</p>
+            <h1 id="game-title">Stay in the <em>signal.</em></h1>
+            <p>Collect pulse cores to stabilize your runner. Every chain is worth more. One rule: don’t touch the red.</p>
+            <button class="primary" id="start-button"><span>START RUN</span><kbd>SPACE</kbd></button>
+            <div class="control-hint"><span><kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd></span><i></i><span>STEER TO SURVIVE</span></div>
+          </div>
+
+          <div class="overlay paused hidden" id="paused">
+            <p class="kicker">RUN SUSPENDED</p>
+            <h2>Hold the line.</h2>
+            <button class="primary" id="resume-button"><span>RESUME</span><kbd>P</kbd></button>
+          </div>
+
+          <div class="overlay game-over hidden" id="game-over">
+            <p class="kicker">SIGNAL LOST</p>
+            <h2>Run complete.</h2>
+            <div class="final-stats">
+              <div><span>FINAL SCORE</span><strong id="final-score">0</strong></div>
+              <div><span>BEST CHAIN</span><strong id="final-combo">×0</strong></div>
+            </div>
+            <button class="primary" id="restart-button"><span>RUN AGAIN</span><kbd>R</kbd></button>
+          </div>
+
+          <div class="level-chip" id="level-chip">SECTOR 01</div>
+          <button class="pause-button" id="pause-button" aria-label="Pause game" disabled><span></span><span></span></button>
+          <p class="sr-only" id="live-status" aria-live="polite">Ready to start.</p>
+        </div>
+
+        <div class="mobile-controls" aria-label="Touch steering controls">
+          <button id="left-button" aria-label="Steer left"><span>←</span> LEFT</button>
+          <p>HOLD TO STEER</p>
+          <button id="right-button" aria-label="Steer right">RIGHT <span>→</span></button>
+        </div>
+      </section>
+
+      <footer>
+        <p><span class="legend pulse-dot"></span> COLLECT PULSES <span class="legend hazard-dot"></span> AVOID HAZARDS</p>
+        <p>LOCAL ARCADE // NO DATA LINK</p>
+      </footer>
+    </main>
+    <script type="module" src="/app.mjs"></script>
+  </body>
+</html>

@@ -1,4 +1,4 @@
-import { test, expect } from "../../../plugins/agentic-delivery/assets/playwright/agentic-evidence.mjs";
+import { test, expect } from "../../../plugins/vision/assets/playwright/agentic-evidence.mjs";
 
 test("flaky real service journey", async ({ page }, testInfo) => {
   expect(testInfo.retry, "the seeded first attempt must fail").toBeGreaterThan(0);

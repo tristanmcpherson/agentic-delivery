@@ -5,7 +5,8 @@ import path from "node:path";
 import process from "node:process";
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/(.:)/, "$1")), "..");
-const harness = path.join(root, "plugins", "agentic-delivery", "scripts", "agentic-harness.mjs");
+const harness = path.join(root, "plugins", "vision", "scripts", "agentic-harness.mjs");
+const lifecycle = path.join(root, "plugins", "vision", "scripts", "agentic-lifecycle.mjs");
 const config = path.join(root, "proof", "config.json");
 const outcomes = [];
 const playwrightBrowsersPath = process.env.PLAYWRIGHT_BROWSERS_PATH || path.join(root, ".playwright-browsers");
@@ -86,6 +87,27 @@ try {
 
   const goalDrift = await harnessRun("validate-task", "goal-contract-drift.json");
   expectResult("goal-contract-drift", "defect", "goal acceptance cannot drift from the frozen contract", goalDrift, false, /goal_spec.acceptance_ids must exactly match task acceptance ids/);
+
+  const rawPromptGoal = await runNode([lifecycle, "activate", "--root", root, "--task", path.join(root, "proof", "tasks", "discovery-healthy.json")]);
+  expectResult("goal-intent-required", "defect", "raw prompt activation cannot bypass canonical goal reconciliation", rawPromptGoal, false, /Pass --goal-intent/);
+
+  const missingRiskGate = await harnessRun("validate-task", "risk-gate-missing.json");
+  expectResult("risk-gate-missing", "defect", "a declared security risk cannot omit its direct gate", missingRiskGate, false, /risk security has no required direct gate/);
+
+  const fastRiskBypass = await harnessRun("validate-task", "risk-gate-fast-bypass.json");
+  expectResult("risk-gate-fast-bypass", "defect", "planning size cannot turn a security integration gate into a fast-only check", fastRiskBypass, false, /risk security gate too-fast must run at integration/);
+
+  const continuationGuards = await runNode(["--test", "--test-name-pattern", "continuation halts", path.join(root, "test", "agentic-lifecycle.test.mjs")]);
+  expectResult("continuation-guards", "healthy", "bounded continuation halts on repeated no-progress, authorization, reentrancy, and context pressure", continuationGuards, true, /pass 1/);
+
+  const advisoryBinding = await runNode(["--test", "--test-name-pattern", "advisory reviews are bound", path.join(root, "test", "agentic-assurance.test.mjs")]);
+  expectResult("advisory-hash-binding", "healthy", "advisory review is current-attempt and artifact-hash bound", advisoryBinding, true, /pass 1/);
+
+  const deliveryBinding = await runNode(["--test", "--test-name-pattern", "delivered-and-verified requires", path.join(root, "test", "agentic-assurance.test.mjs")]);
+  expectResult("protected-delivery-binding", "healthy", "protected delivery requires distinct signed controller and exact closure bindings", deliveryBinding, true, /pass 1/);
+
+  const deliveryWithoutClosure = await harnessRun("delivery-request", "production-sim.json", ["--target", "production", "--deployment-id", "production-fixture-v1", "--approval-id", "APP-PROOF", "--approved-by", "proof-owner", "--approved-at", "2026-07-14T16:00:00.000Z"]);
+  expectResult("delivery-without-closure", "defect", "local or incomplete evidence cannot request delivered-and-verified authority", deliveryWithoutClosure, false, /requires current protected closure evidence/);
 
   const invalid = await harnessRun("validate-task", "mock-only-invalid.json");
   expectResult("mock-only-contract", "defect", "mock-only task contract is rejected", invalid, false, /real-service UI check/);

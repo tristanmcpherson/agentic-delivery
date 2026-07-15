@@ -1,4 +1,4 @@
-import { test, expect } from "../../../plugins/agentic-delivery/assets/playwright/agentic-evidence.mjs";
+import { test, expect } from "../../../plugins/vision/assets/playwright/agentic-evidence.mjs";
 
 test("real service profile journey", async ({ page }) => {
   await page.goto("/");

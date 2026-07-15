@@ -45,7 +45,7 @@ Keep a component only when it improves held-out outcomes or materially reduces o
 
 ## Executable pilot
 
-`evaluation/pilot-manifest.json` defines a 20-case mechanical pilot spanning discovery-contract consistency, canonical goal binding, mock integrity, API compatibility, business-request provenance, test integrity, deployment identity, migration backfill, async correlation/postconditions, verifier authority, and approval. Run it with:
+`evaluation/pilot-manifest.json` defines a 27-case mechanical pilot spanning discovery-contract consistency, canonical goal binding, mandatory post-research goal intent, direct-risk gate integrity, bounded continuation, current-attempt advisory review, distinct delivery authority, mock integrity, API compatibility, business-request provenance, test integrity, deployment identity, migration backfill, async correlation/postconditions, verifier authority, and approval. Run it with:
 
 ```powershell
 npm run evaluate:pilot

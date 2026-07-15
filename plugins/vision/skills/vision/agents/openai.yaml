@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vision"
+  short_description: "Research-first goals and evidence-bound delivery"
+  default_prompt: "Use $vision to reconcile the work-environment profile and any active contract or goal, research unresolved facts before goal creation, then execute bounded slices until the honest verified target or a stable blocker."

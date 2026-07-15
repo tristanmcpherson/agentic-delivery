@@ -8,8 +8,8 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const harness = path.join(repositoryRoot, "plugins", "agentic-delivery", "scripts", "agentic-harness.mjs");
-const signer = path.join(repositoryRoot, "plugins", "agentic-delivery", "scripts", "sign-verifier-grant.mjs");
+const harness = path.join(repositoryRoot, "plugins", "vision", "scripts", "agentic-harness.mjs");
+const signer = path.join(repositoryRoot, "plugins", "vision", "scripts", "sign-verifier-grant.mjs");
 
 function runNode(args, options = {}) {
   return new Promise((resolve) => {

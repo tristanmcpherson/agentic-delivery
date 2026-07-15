@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "name": "agentic-delivery-adversarial-pilot",
+  "name": "vision-adversarial-pilot",
   "default_repetitions": 1,
   "cases": [
     { "id": "discovery-contract-healthy", "kind": "healthy", "category": "discovery-contract", "critical": false },
@@ -8,6 +8,13 @@
     { "id": "discovery-material-unresolved", "kind": "defect", "category": "requirements-integrity", "critical": true },
     { "id": "discovery-scout-write", "kind": "defect", "category": "scout-boundary", "critical": true },
     { "id": "goal-contract-drift", "kind": "defect", "category": "goal-contract-binding", "critical": true },
+    { "id": "goal-intent-required", "kind": "defect", "category": "goal-contract-binding", "critical": true },
+    { "id": "risk-gate-missing", "kind": "defect", "category": "risk-gate-integrity", "critical": true },
+    { "id": "risk-gate-fast-bypass", "kind": "defect", "category": "risk-gate-integrity", "critical": true },
+    { "id": "continuation-guards", "kind": "healthy", "category": "bounded-continuation", "critical": false },
+    { "id": "advisory-hash-binding", "kind": "healthy", "category": "advisory-review", "critical": false },
+    { "id": "protected-delivery-binding", "kind": "healthy", "category": "delivery-authority", "critical": false },
+    { "id": "delivery-without-closure", "kind": "defect", "category": "delivery-authority", "critical": true },
     { "id": "mock-only-contract", "kind": "defect", "category": "mock-integrity", "critical": true },
     { "id": "focused-unit", "kind": "healthy", "category": "logic", "critical": false },
     { "id": "mocked-partial-control", "kind": "control", "category": "claim-scope", "critical": false },

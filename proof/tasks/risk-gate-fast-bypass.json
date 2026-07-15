@@ -1,0 +1,26 @@
+{
+  "schema_version": 2,
+  "contract_version": 1,
+  "task_id": "PROOF-RISK-FAST-BYPASS",
+  "title": "Reject a fast-only security gate",
+  "planning": { "size": "S", "size_source": "inferred", "confidence": "high" },
+  "risk_gate_version": 1,
+  "risk_flags": ["security"],
+  "acceptance": [
+    { "id": "AC-SECURITY", "surface": "security", "behavior": "The authority boundary rejects builder promotion." }
+  ],
+  "checks": [
+    {
+      "id": "too-fast",
+      "criterion_ids": ["AC-SECURITY"],
+      "claim_scope": "A fast-only check mislabeled as the security gate.",
+      "stage": "fast",
+      "command": "node --test test/agentic-assurance.test.mjs",
+      "required": true,
+      "risk_flags": ["security"],
+      "artifacts": {}
+    }
+  ],
+  "approval_boundaries": [],
+  "evidence_expires_on": ["candidate-change", "contract-change"]
+}

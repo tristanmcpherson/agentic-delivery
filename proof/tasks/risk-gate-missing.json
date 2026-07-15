@@ -1,0 +1,25 @@
+{
+  "schema_version": 2,
+  "contract_version": 1,
+  "task_id": "PROOF-RISK-MISSING",
+  "title": "Reject an unmapped security risk",
+  "planning": { "size": "S", "size_source": "inferred", "confidence": "high" },
+  "risk_gate_version": 1,
+  "risk_flags": ["security"],
+  "acceptance": [
+    { "id": "AC-SECURITY", "surface": "security", "behavior": "The authority boundary rejects builder promotion." }
+  ],
+  "checks": [
+    {
+      "id": "unmapped",
+      "criterion_ids": ["AC-SECURITY"],
+      "claim_scope": "A check that forgot to declare its risk coverage.",
+      "stage": "integration",
+      "command": "node --test test/agentic-assurance.test.mjs",
+      "required": true,
+      "artifacts": {}
+    }
+  ],
+  "approval_boundaries": [],
+  "evidence_expires_on": ["candidate-change", "contract-change"]
+}

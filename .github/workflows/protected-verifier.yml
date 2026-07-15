@@ -53,7 +53,7 @@ jobs:
           package-manager-cache: false
       - name: Create exact verifier grant request with trusted harness
         run: >-
-          node controller/plugins/agentic-delivery/scripts/agentic-harness.mjs grant-request
+          node controller/plugins/vision/scripts/agentic-harness.mjs grant-request
           --root candidate
           --config ${{ inputs.config }}
           --task ${{ inputs.task }}
@@ -90,7 +90,7 @@ jobs:
         env:
           AGENTIC_VERIFIER_PRIVATE_KEY: ${{ secrets.AGENTIC_VERIFIER_PRIVATE_KEY }}
         run: >-
-          node controller/plugins/agentic-delivery/scripts/sign-verifier-grant.mjs
+          node controller/plugins/vision/scripts/sign-verifier-grant.mjs
           --request controller-artifacts/verifier-request.json
           --output controller-artifacts/verifier-grant.json
           --expected-candidate ${{ inputs.candidate_sha }}
@@ -135,14 +135,14 @@ jobs:
         run: npm ci
       - name: Run required checks with trusted harness and signed grant
         run: >-
-          node controller/plugins/agentic-delivery/scripts/agentic-harness.mjs run
+          node controller/plugins/vision/scripts/agentic-harness.mjs run
           --root candidate
           --config ${{ inputs.config }}
           --task ${{ inputs.task }}
           --verifier-grant ../controller-artifacts/verifier-grant.json
       - name: Emit closure status
         run: >-
-          node controller/plugins/agentic-delivery/scripts/agentic-harness.mjs status
+          node controller/plugins/vision/scripts/agentic-harness.mjs status
           --root candidate
           --config ${{ inputs.config }}
           --task ${{ inputs.task }}

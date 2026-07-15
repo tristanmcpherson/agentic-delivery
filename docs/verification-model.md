@@ -2,17 +2,21 @@
 
 ## Discovery and goals are orchestration
 
-For new contracted work, Agentic Delivery performs evidence-backed discovery before candidate edits and persistent-goal creation. Direct research handles one bounded question; one to three read-only scouts may handle independent, context-heavy questions. The main agent resolves contradictions and material choices, freezes a schema-v3 task contract, and uses its canonical `goal_spec` as the persistent objective.
+For new contracted work, Vision performs evidence-backed discovery before candidate edits and persistent-goal creation. Direct research handles one bounded question; one to three read-only scouts may handle independent, context-heavy questions. The main agent resolves contradictions and material choices, freezes a schema-v3 task contract, and uses its canonical `goal_spec` as the persistent objective.
 
 The harness can reject structurally incomplete intake, unresolved material questions, declared write-capable scouts, raw transcript fields, false capability fallbacks, synthesis drift, and goal/acceptance mismatch. It cannot prove from self-reported JSON that delegation occurred, that a scout made no write, or that a goal tool was invoked after synthesis. Those claims require model trace inspection and before/after workspace auditing in the held-out evaluation.
 
 Scouts and persistent goals remain builder-side orchestration. They are not verifier principals, do not grant approval, and do not change the evidence required for an honest completion state.
+
+After goal creation, the lifecycle controller can bind its exact intent hash to the contract, Bead, workspace or task-owned worktree, branch, optional candidate, current slice, and evidence. The active-task and worktree files are derived caches. Hooks may restore their redacted context but do not write, force continuation, or become authority. Resume returns exactly one next slice or a stable blocker.
 
 ## Planning size is not risk
 
 `S`, `M`, and `L` control only where the plan lives and how it is decomposed. The agent infers size and the user can override it. Risk flags independently select verification. Approval is determined by the action, target environment, credential scope, cost, and side effects.
 
 Typical risk flags include `logic`, `api-contract`, `persistence`, `migration`, `async`, `ui-behavior`, `visual`, `auth`, `tenant`, `external-integration`, `runtime-config`, `deployment`, `security`, and `performance`.
+
+New contracts opt into `risk_gate_version: 1` and map every direct risk through required checks' `risk_flags`. The harness rejects missing mappings, stage downgrades, and acceptance-surface mismatches. Changing S to L or L to S cannot change that result.
 
 ## Environment and claim matrix
 
@@ -33,6 +37,8 @@ Coverage is many-to-many. One criterion may require unit, integration, and deplo
 
 Material visual criteria require final-state screenshot evidence and structured review. Functional UI/API criteria require DOM, network, and server assertions even when no visual review is necessary.
 
+Required advisory-review lanes are builder-side evidence. Each lane covers the exact check criteria and compatible surface, binds current-run artifacts by SHA-256, reports named adversarial cases and cleanup receipts, and stays within the configured retry limit. Missing, stale, tampered, failed, or inconclusive review fails the gate. Another model or thread does not make the review independent.
+
 ## Trust boundary
 
 - The builder proposes the contract and changes candidate code and task-specific tests.
@@ -43,11 +49,13 @@ A different conversation is not independence. Closure-grade separation comes fro
 
 Setting a config field does not create a verifier. In verifier mode, every current required check must carry a valid Ed25519 grant signed by the protected controller. The grant binds the exact task, candidate, workspace, config, harness, profiles, runtime, repository, workflow, verifier, and trust-key fingerprint. The private key must never enter a job that executes candidate code.
 
+Closure does not by itself prove delivery. `delivered-and-verified` requires a short-lived attestation signed by a distinct delivery-controller key. It binds the current closure-status hash, exact candidate, target, observed deployment identity, explicit approval, required protected post-deploy checks, and both trust-key fingerprints. Reusing the verifier key is rejected.
+
 ## Evidence identity and freshness
 
 Evidence is bound to the contract version/hash, complete candidate fingerprint, config and harness hashes, protected profile hash, runtime/toolchain identity, test IDs/results, raw artifact hashes, and deployment identity where applicable. Code, contract, profile, harness, runtime configuration, or deployment changes expire affected evidence.
 
-Local mode issues `locally-verified`; protected verifier mode issues `closure-verified` only for signed, current verifier runs. The status builder rejects stale config, harness, profile-definition, runtime, workspace, and contract identities rather than merely recording those hashes. Missing evidence yields `implemented-not-verified`. Delivery plus matching post-deploy evidence yields `delivered-and-verified` at the workflow layer.
+Local mode issues `locally-verified`; protected verifier mode issues `closure-verified` only for signed, current verifier runs. The status builder rejects stale config, harness, profile-definition, runtime, workspace, and contract identities rather than merely recording those hashes. Missing evidence yields `implemented-not-verified`. Only a valid distinct signed delivery attestation over matching protected post-deploy evidence promotes status to `delivered-and-verified`.
 
 ## Business-flow provenance
 

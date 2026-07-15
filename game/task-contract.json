@@ -1,0 +1,113 @@
+{
+  "schema_version": 3,
+  "contract_version": 1,
+  "task_id": "GAME-ky0",
+  "title": "Build the Pulse Runner browser arcade game",
+  "planning": {
+    "size": "M",
+    "size_source": "inferred",
+    "confidence": "high"
+  },
+  "intake": {
+    "status": "ready",
+    "research_mode": "direct",
+    "mode_reason": "The repository has no product app or game direction, so an isolated static browser game is the smallest safe outcome.",
+    "capabilities": {
+      "subagents": "unavailable",
+      "goal": "not-authorized"
+    },
+    "questions": [
+      {
+        "id": "RQ-SURFACE",
+        "question": "Where can a game live without changing the framework proof fixture?",
+        "material": true,
+        "status": "resolved",
+        "conclusion": "A self-contained game directory and opt-in package scripts preserve all existing framework and proof behavior.",
+        "confidence": "high",
+        "evidence_refs": ["repo:package.json:1", "repo:proof/fixture/playwright.config.mjs:1"]
+      }
+    ],
+    "scouts": [],
+    "conflicts": [],
+    "assumptions": [
+      {
+        "id": "AS-GENRE",
+        "statement": "A polished score-chasing arcade game is acceptable because the user did not specify genre, theme, or technology.",
+        "material": false,
+        "reversible": true
+      },
+      {
+        "id": "AS-DELIVERY",
+        "statement": "Local browser play is the delivery target; public hosting is out of scope.",
+        "material": false,
+        "reversible": true
+      }
+    ],
+    "unresolved_material": [],
+    "synthesis": {
+      "outcome": "Pulse Runner is a polished, responsive browser game with a complete replayable loop.",
+      "requirements": [
+        "Support keyboard and touch steering.",
+        "Provide score, energy, combo, pause, game-over, and restart states.",
+        "Keep game simulation deterministic and independently testable.",
+        "Present a responsive neon arcade interface with readable instructions."
+      ],
+      "constraints": [
+        "Do not alter or weaken the repository proof fixture or its negative cases.",
+        "Do not require external services or runtime dependencies."
+      ],
+      "non_goals": ["Online multiplayer", "Accounts or cloud leaderboards", "Deployment or publishing"],
+      "risk_flags": ["logic", "ui-behavior", "visual"],
+      "acceptance_ids": ["AC-1", "AC-2", "AC-3", "AC-4"]
+    }
+  },
+  "goal_spec": {
+    "objective": "Deliver the Pulse Runner game defined by this frozen contract.",
+    "acceptance_ids": ["AC-1", "AC-2", "AC-3", "AC-4"],
+    "completion_target": "locally-verified",
+    "persistence": "contract-fallback",
+    "mechanism": "Beads parent and child work items",
+    "fallback_reason": "The user requested the workflow skill but did not explicitly authorize persistent goal creation."
+  },
+  "risk_gate_version": 1,
+  "risk_flags": ["logic", "ui-behavior", "visual"],
+  "acceptance": [
+    {"id": "AC-1", "surface": "logic", "behavior": "The player can steer, collect pulses, build a combo, lose energy on hazards, and reach game over."},
+    {"id": "AC-2", "surface": "ui", "behavior": "The browser exposes start, pause, resume, game-over, and restart as usable states with current score and energy."},
+    {"id": "AC-3", "surface": "ui", "behavior": "Keyboard and touch controls are available and the layout remains usable at desktop and mobile widths."},
+    {"id": "AC-4", "surface": "ui", "behavior": "The final game has a coherent, readable neon arcade presentation with clear hierarchy and interaction feedback."}
+  ],
+  "checks": [
+    {
+      "id": "game-engine-unit",
+      "criterion_ids": ["AC-1"],
+      "claim_scope": "Deterministic simulation, steering, collision, scoring, combo, energy depletion, and terminal-state rules.",
+      "stage": "fast",
+      "command": "node game/run-engine-tests.mjs",
+      "expected_tests": ["deterministic seeded simulation", "steering and bounds", "pulse collection and combo", "hazard collision and game over", "paused simulation"],
+      "required": true,
+      "risk_flags": ["logic"],
+      "artifacts": {"test_integrity": true}
+    },
+    {
+      "id": "game-browser-journey",
+      "criterion_ids": ["AC-2", "AC-3", "AC-4"],
+      "claim_scope": "The real static candidate starts, responds to keyboard input, pauses, resumes, restarts, exposes touch controls, and renders correctly at desktop and mobile viewports.",
+      "stage": "ui",
+      "profile": "local-static",
+      "command": "npx playwright test game/tests/game.spec.mjs --config=game/playwright.config.mjs",
+      "expected_tests": ["desktop gameplay journey", "mobile controls and layout"],
+      "required": true,
+      "risk_flags": ["ui-behavior", "visual"],
+      "safe_for_live": true,
+      "artifacts": {
+        "attestation": true,
+        "test_integrity": true,
+        "screenshots_min": 2,
+        "visual_review": true
+      }
+    }
+  ],
+  "approval_boundaries": [],
+  "evidence_expires_on": ["candidate-change", "contract-change", "profile-change", "harness-change"]
+}

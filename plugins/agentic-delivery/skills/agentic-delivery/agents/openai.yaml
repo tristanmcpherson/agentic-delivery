@@ -1,4 +1,0 @@
-interface:
-  display_name: "Agentic Delivery"
-  short_description: "Research, goal-set, build, and verify delivery"
-  default_prompt: "Use $agentic-delivery to research this request first with calibrated read-only scouts when useful, freeze the evidence-backed contract, create the persistent goal with the available goal mechanism, and continue until its verified completion target is reached."

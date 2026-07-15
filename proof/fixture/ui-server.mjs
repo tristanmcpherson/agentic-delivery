@@ -25,7 +25,7 @@ function html() {
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100vh; display: grid; place-items: center; color: #eef2ff; background: radial-gradient(circle at 15% 10%, #244766 0, transparent 32%), radial-gradient(circle at 90% 85%, #49336f 0, transparent 34%), #09111f; }
     main { width: min(880px, calc(100% - 40px)); display: grid; grid-template-columns: 1.25fr .75fr; gap: 24px; }
-    .panel { border: 1px solid rgba(167, 196, 255, .2); border-radius: 24px; background: rgba(10, 19, 35, .84); box-shadow: 0 28px 80px rgba(0,0,0,.36); backdrop-filter: blur(18px); }
+    .panel { border: 1px solid rgba(167, 196, 255, .2); border-radius: 24px; background: rgba(10, 19, 35, .94); box-shadow: 0 28px 80px rgba(0,0,0,.36); }
     .hero { padding: 44px; }
     .eyebrow { color: #9bc7ff; font-size: 12px; font-weight: 750; letter-spacing: .16em; text-transform: uppercase; }
     h1 { margin: 14px 0 12px; font-size: clamp(36px, 5vw, 62px); line-height: .98; letter-spacing: -.045em; }

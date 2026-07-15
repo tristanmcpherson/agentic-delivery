@@ -1,12 +1,12 @@
-# Agentic Delivery framework
+# Vision framework
 
-This repository packages the `agentic-delivery` Codex plugin and its executable proof fixture.
+This repository packages the `vision` Codex plugin and its executable proof fixture.
 
 ## Map
 
-- `plugins/agentic-delivery/skills/agentic-delivery/` contains the single outcome-driven workflow, including calibrated read-only discovery before contract-bound goal creation.
-- `plugins/agentic-delivery/scripts/agentic-harness.mjs` produces and validates developer/verifier evidence; protected CI is the closure authority.
-- `plugins/agentic-delivery/assets/project-template/` is installed into target repositories.
+- `plugins/vision/skills/vision/` contains the single outcome-driven workflow, including calibrated read-only discovery before contract-bound goal creation.
+- `plugins/vision/scripts/agentic-harness.mjs` produces and validates developer/verifier evidence; protected CI is the closure authority.
+- `plugins/vision/assets/project-template/` is installed into target repositories.
 - `docs/verification-model.md` defines environment truth and evidence requirements.
 - `docs/protected-verifier.md` defines signed grant authority and the three-job controller boundary.
 - `proof/` demonstrates mock-only, business-request provenance, test-integrity, deployment-identity, visual-review, and approval controls.

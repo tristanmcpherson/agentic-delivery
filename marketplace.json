@@ -1,14 +1,14 @@
 {
-  "name": "agentic-delivery-local",
+  "name": "vision-local",
   "interface": {
-    "displayName": "Agentic Delivery Experimental"
+    "displayName": "Vision"
   },
   "plugins": [
     {
-      "name": "agentic-delivery",
+      "name": "vision",
       "source": {
         "source": "local",
-        "path": "./plugins/agentic-delivery"
+        "path": "./plugins/vision"
       },
       "policy": {
         "installation": "AVAILABLE",
