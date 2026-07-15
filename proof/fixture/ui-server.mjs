@@ -48,7 +48,7 @@ function html() {
 <body>
   <main>
     <section class="panel hero">
-      <div class="eyebrow">Agentic delivery proof</div>
+      <div class="eyebrow">Vision delivery proof</div>
       <h1>The browser should meet the real API.</h1>
       <p class="lede">Mocked UI states are useful. This journey proves whether the application actually understands the service response in the selected environment.</p>
       <button type="button" id="load-profile">Load verified profile</button>
