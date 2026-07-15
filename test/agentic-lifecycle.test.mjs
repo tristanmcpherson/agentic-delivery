@@ -138,6 +138,21 @@ test("continuation halts on no progress, repeated authorization failure, reentra
   assert.equal(guards.halt_reason, "context-pressure");
 });
 
+test("activation rejects missing goal intent before reading workspace state", async () => {
+  const temporaryRoot = await fs.mkdtemp(path.join(os.tmpdir(), "agentic-goal-boundary-"));
+  try {
+    const result = await runNode([lifecycle, "activate", "--root", temporaryRoot, "--task", "missing-task"]);
+    assert.notEqual(result.code, 0);
+    assert.match(result.stderr, /Pass --goal-intent/);
+    assert.doesNotMatch(result.stderr, /Configuration not found/);
+  } finally {
+    const temporaryBase = path.resolve(os.tmpdir());
+    const resolved = path.resolve(temporaryRoot);
+    assert.ok(resolved.startsWith(`${temporaryBase}${path.sep}`));
+    await fs.rm(resolved, { recursive: true, force: true });
+  }
+});
+
 test("activation binds the canonical goal and resume returns one current slice while hooks remain read-only", async () => {
   const temporaryRoot = await fs.mkdtemp(path.join(os.tmpdir(), "agentic-lifecycle-"));
   const fakeBin = path.join(temporaryRoot, "fake-bin");

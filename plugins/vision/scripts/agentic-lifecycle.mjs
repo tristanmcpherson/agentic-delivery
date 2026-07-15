@@ -363,12 +363,12 @@ async function commandWorktreeCreate(args) {
 }
 
 async function commandActivate(args) {
+  if (!args["goal-intent"] || args["goal-intent"] === true) throw new Error("Pass --goal-intent <sha256> after creating or reconciling the exact canonical goal.");
   const root = path.resolve(String(args.root || process.cwd()));
   const context = await loadTaskContext(root, args.task);
   const policy = policyFor(context.config);
   const policyErrors = validateOrchestrationPolicy(policy);
   if (policyErrors.length) throw new Error(`Unsafe orchestration policy:\n- ${policyErrors.join("\n- ")}`);
-  if (!args["goal-intent"] || args["goal-intent"] === true) throw new Error(`Pass --goal-intent ${context.goal.intent_sha256} after creating or reconciling the exact canonical goal.`);
   if (args["goal-intent"] !== context.goal.intent_sha256) throw new Error("The supplied goal intent does not match the canonical contract-bound goal.");
   if (!SHA256_PATTERN.test(String(args["goal-intent"]))) throw new Error("--goal-intent must be a SHA-256 value.");
 
