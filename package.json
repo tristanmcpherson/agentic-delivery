@@ -17,9 +17,6 @@
     "evaluate:pilot": "node scripts/run-evaluation.mjs",
     "evaluate": "npm run evaluate:pilot",
     "evaluate:pilot:current": "node scripts/run-evaluation.mjs --use-report proof/mechanical-report.json",
-    "game": "node game/server.mjs",
-    "game:test": "node --test tests/game-engine.test.mjs && npm run game:test:browser",
-    "game:test:browser": "playwright test game/tests/game.spec.mjs --config=game/playwright.config.mjs",
     "validate": "npm run test && npm run portability && npm run proof"
   },
   "devDependencies": {

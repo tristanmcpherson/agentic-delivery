@@ -29,7 +29,6 @@ $includes = @(
   'README.md',
   'docs',
   'evaluation',
-  'game',
   'marketplace.json',
   'package.json',
   'package-lock.json',
