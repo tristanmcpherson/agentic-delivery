@@ -8,7 +8,7 @@ import test from "node:test";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "..");
 const campaignCli = path.join(repositoryRoot, "plugins", "vision", "scripts", "vision-campaign.mjs");
-const manifest = path.join(repositoryRoot, "evaluation", "campaign", "manifest.local.json");
+const sourceManifest = path.join(repositoryRoot, "evaluation", "campaign", "manifest.local.json");
 
 function runNode(args) {
   return new Promise((resolve) => {
@@ -23,8 +23,19 @@ function runNode(args) {
 
 test("four local real-goal fixtures fail as no-ops and pass three clean oracle trials", { timeout: 120_000 }, async () => {
   const temporaryRoot = await fs.mkdtemp(path.join(os.tmpdir(), "vision-real-goals-"));
+  const manifestPath = path.join(path.dirname(sourceManifest), `.manifest.test-${process.pid}-${Date.now()}.json`);
   try {
-    const init = await runNode([campaignCli, "init", "--manifest", manifest, "--root", temporaryRoot, "--json"]);
+    // This suite validates fixture and oracle integrity.  It never runs an agent,
+    // so use a deterministic raw-JSONL runner rather than requiring a locally
+    // installed Codex binary on every CI platform.
+    const manifest = JSON.parse(await fs.readFile(sourceManifest, "utf8"));
+    manifest.execution.codex = {
+      mode: "raw-jsonl",
+      command: process.execPath,
+      prefix_args: [],
+    };
+    await fs.writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+    const init = await runNode([campaignCli, "init", "--manifest", manifestPath, "--root", temporaryRoot, "--json"]);
     assert.equal(init.code, 0, init.stderr);
     const preflight = await runNode([campaignCli, "preflight", "--root", temporaryRoot, "--json"]);
     assert.equal(preflight.code, 0, preflight.stderr);
@@ -41,6 +52,7 @@ test("four local real-goal fixtures fail as no-ops and pass three clean oracle t
       assert.match(task.oracle_sha256, /^[a-f0-9]{64}$/);
     }
   } finally {
+    await fs.rm(manifestPath, { force: true });
     await fs.rm(temporaryRoot, { recursive: true, force: true });
   }
 });

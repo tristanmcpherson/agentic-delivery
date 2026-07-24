@@ -42,7 +42,9 @@ jobs:
         if: always()
         with:
           name: mechanical-evidence-${{ matrix.os }}
-          if-no-files-found: error
+          # Earlier test failures can prevent proof generation. Preserve the
+          # primary failure instead of replacing it with an upload error.
+          if-no-files-found: warn
           path: |
             proof/mechanical-report.json
             proof/last-proof.json
