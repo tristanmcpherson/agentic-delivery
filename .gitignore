@@ -4,7 +4,7 @@ node_modules/
 .playwright-browsers/
 test-results/
 playwright-report/
-/.agentic/
+/.vision/
 artifacts/
 proof/evidence/
 proof/last-proof.json

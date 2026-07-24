@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vision.local/schemas/harness-doctor-report-v1.json",
+  "title": "Vision Harness Doctor Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "mode",
+    "scope",
+    "subject",
+    "sources",
+    "inventory",
+    "findings",
+    "semantic_review",
+    "summary",
+    "errors"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "mode": { "const": "diagnostic-read-only" },
+    "scope": { "enum": ["project", "user", "all"] },
+    "subject": {
+      "type": "object",
+      "required": ["root", "codex_home", "kind"],
+      "properties": {
+        "root": { "type": "string" },
+        "codex_home": { "type": ["string", "null"] },
+        "kind": { "type": "string" }
+      }
+    },
+    "sources": { "type": "array", "items": { "type": "object" } },
+    "inventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["skills", "plugins", "marketplaces", "harness", "model_references", "tools"],
+      "properties": {
+        "skills": { "type": "array", "items": { "type": "object" } },
+        "plugins": { "type": "array", "items": { "type": "object" } },
+        "marketplaces": { "type": "array", "items": { "type": "object" } },
+        "harness": { "type": "array", "items": { "type": "object" } },
+        "model_references": { "type": "array", "items": { "type": "object" } },
+        "tools": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "code", "category", "status", "severity", "confidence", "ownership", "modified", "recommendation", "rationale", "evidence", "preview", "confirmation_required"],
+        "properties": {
+          "id": { "type": "string" },
+          "code": { "type": "string" },
+          "category": { "type": "string" },
+          "status": { "enum": ["fail", "attention", "unknown"] },
+          "severity": { "enum": ["error", "warning", "info"] },
+          "confidence": { "enum": ["high", "medium", "low"] },
+          "ownership": { "type": "string" },
+          "modified": { "type": ["boolean", "null"] },
+          "recommendation": { "enum": ["retain", "update", "add", "disable", "remove-preview", "manual-review"] },
+          "rationale": { "type": "string" },
+          "evidence": { "type": "array", "items": { "type": "string" } },
+          "preview": { "type": ["string", "null"] },
+          "confirmation_required": { "type": "boolean" }
+        }
+      }
+    },
+    "semantic_review": {
+      "type": "object",
+      "required": ["requires_model_judgment", "policy", "queue"],
+      "properties": {
+        "requires_model_judgment": { "const": true },
+        "policy": { "type": "string" },
+        "queue": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "summary": { "type": "object" },
+    "errors": { "type": "array", "items": { "type": "object" } }
+  }
+}

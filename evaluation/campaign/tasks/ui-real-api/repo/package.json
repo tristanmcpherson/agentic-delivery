@@ -1,0 +1,9 @@
+{
+  "name": "vision-goal-ui-real-api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "start": "node server.mjs"
+  }
+}

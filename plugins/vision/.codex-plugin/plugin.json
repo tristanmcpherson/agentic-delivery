@@ -1,6 +1,6 @@
 {
   "name": "vision",
-  "version": "0.3.0",
+  "version": "0.4.0+codex.20260723000000",
   "description": "Vision researches, goal-sets, resumes, orchestrates, verifies, and delivers engineering work with bounded roles and acceptance-linked evidence.",
   "author": {
     "name": "Tristan"
@@ -18,14 +18,16 @@
       "Read-only scout research",
       "Contract-bound persistent goals",
       "Deterministic resume and continuation guards",
+      "Bounded autonomous outcome loops",
       "Project-scoped builder and reviewer roles",
       "Task-owned worktree binding",
       "Beads integration",
       "Current-attempt advisory review",
       "Protected verification and delivery bindings",
+      "Read-only harness and skill diagnostics",
       "Risk-selected diagnostics"
     ],
-    "defaultPrompt": "Use $vision to reconcile the work-environment profile and any active contract or goal, research unresolved facts with calibrated read-only scouts when useful, freeze and validate the evidence-backed contract, create the exact canonical persistent goal, activate deterministic lifecycle state, execute bounded slices with advisory review, and continue until the honest verified completion target is reached or a configured blocker requires user action."
+    "defaultPrompt": "Take the user's stated engineering outcome end to end with Vision. Research and create or reconcile the canonical goal automatically, then implement, verify, diagnose, and reverify until locally-verified by default or the user's explicit target or a concrete blocker. Do not ask the user to repeat Vision's internal workflow."
   },
   "mcpServers": "./.mcp.json"
 }

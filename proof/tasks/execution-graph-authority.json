@@ -1,0 +1,86 @@
+{
+  "schema_version": 3,
+  "contract_version": 1,
+  "task_id": "PROOF-EXECUTION-GRAPH-AUTHORITY",
+  "title": "Reject graph-based verifier authority",
+  "planning": { "size": "M", "size_source": "inferred", "confidence": "high" },
+  "intake": {
+    "status": "ready",
+    "research_mode": "direct",
+    "mode_reason": "The fixture has one bounded authority question.",
+    "capabilities": { "subagents": "available", "goal": "authorized" },
+    "questions": [
+      {
+        "id": "RQ-AUTHORITY",
+        "question": "Can a builder-controlled graph create protected verification authority?",
+        "material": true,
+        "status": "resolved",
+        "conclusion": "No. Graph nodes remain builder-side orchestration and cannot become protected principals.",
+        "confidence": "high",
+        "evidence_refs": ["repo:plugins/vision/skills/vision/references/trust-model.md:1"]
+      }
+    ],
+    "scouts": [],
+    "conflicts": [],
+    "assumptions": [],
+    "unresolved_material": [],
+    "synthesis": {
+      "outcome": "Builder-controlled graph nodes cannot claim protected verifier authority.",
+      "requirements": ["Reject privileged graph executors."],
+      "constraints": ["Keep protected CI outside the candidate-controlled graph."],
+      "non_goals": ["Replace the signed verifier grant model."],
+      "risk_flags": ["logic"],
+      "acceptance_ids": ["AC-AUTHORITY"]
+    }
+  },
+  "goal_spec": {
+    "objective": "Builder-controlled graph nodes cannot claim protected verifier authority.",
+    "acceptance_ids": ["AC-AUTHORITY"],
+    "completion_target": "locally-verified",
+    "persistence": "goal-tool",
+    "mechanism": "create_goal"
+  },
+  "execution_graph": {
+    "schema_version": 1,
+    "max_parallel": 1,
+    "nodes": [
+      {
+        "id": "fake-verifier",
+        "kind": "review",
+        "executor": "protected-verifier",
+        "description": "Improperly claim protected verification inside the builder graph.",
+        "criterion_ids": ["AC-AUTHORITY"],
+        "inputs": ["contract:AC-AUTHORITY"],
+        "outputs": ["fake-closure"],
+        "isolation": "read-only",
+        "write_scope": []
+      }
+    ],
+    "edges": [],
+    "convergence": {
+      "max_repair_rounds": 2,
+      "no_progress_limit": 2,
+      "dedupe_scope": "all-seen",
+      "required_failure": "block"
+    }
+  },
+  "risk_gate_version": 1,
+  "risk_flags": ["logic"],
+  "acceptance": [
+    { "id": "AC-AUTHORITY", "surface": "logic", "behavior": "Privileged graph executors are rejected." }
+  ],
+  "checks": [
+    {
+      "id": "graph-validator",
+      "criterion_ids": ["AC-AUTHORITY"],
+      "claim_scope": "Execution graph authority validation.",
+      "stage": "fast",
+      "command": "node --test test/execution-graph.test.mjs",
+      "required": true,
+      "risk_flags": ["logic"],
+      "artifacts": {}
+    }
+  ],
+  "approval_boundaries": [],
+  "evidence_expires_on": ["contract-change", "harness-change"]
+}

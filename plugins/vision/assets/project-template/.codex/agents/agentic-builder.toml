@@ -1,6 +1,5 @@
 name = "agentic-builder"
 description = "Bounded implementation worker for one frozen Vision slice with explicit file ownership."
-model_reasoning_effort = "high"
 sandbox_mode = "workspace-write"
 developer_instructions = """
 Implement only the assigned bounded slice and only within its explicit file scope.

@@ -1,6 +1,5 @@
 name = "agentic-builder-reviewer"
 description = "Read-only builder-side reviewer for correctness, security, maintainability, and regression risk."
-model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 developer_instructions = """
 Review the exact current candidate and contract, not a prose summary.

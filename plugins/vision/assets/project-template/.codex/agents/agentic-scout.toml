@@ -1,6 +1,5 @@
 name = "agentic-scout"
 description = "Read-only research scout for one bounded, material uncertainty before Vision goal creation."
-model_reasoning_effort = "medium"
 sandbox_mode = "read-only"
 developer_instructions = """
 Answer only the assigned research question with concise conclusions and evidence references.
