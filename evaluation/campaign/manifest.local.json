@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "campaign_id": "vision-local-tuning-20260716-v1",
+  "description": "Local paired tuning campaign for Vision's bounded companion workflow. This corpus is calibration evidence, not held-out or protected closure evidence.",
+  "primary_epochs": 2,
+  "epochs": 30,
+  "stop_after_eligible_hours": 10,
+  "oracle_repetitions": 3,
+  "heartbeat_ms": 15000,
+  "max_credible_gap_ms": 60000,
+  "preflight_timeout_ms": 120000,
+  "verifier_timeout_ms": 120000,
+  "execution": {
+    "timeout_ms": 900000,
+    "codex": {
+      "mode": "codex-exec",
+      "command": "codex",
+      "prefix_args": [],
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "medium",
+      "windows_sandbox": "elevated",
+      "approval": "never",
+      "sandbox": "workspace-write",
+      "extra_args": ["--ephemeral", "--color", "never"]
+    }
+  },
+  "arms": [
+    {
+      "id": "lean",
+      "prompt_prefix": "Solve the requested repository task directly. Inspect the relevant code, make the smallest correct change, and run the repository's tests."
+    },
+    {
+      "id": "vision",
+      "prompt_prefix": "Use Vision companion mode. First inspect the repository and convert the request into observable acceptance and explicit non-goals. Work in one bounded slice at a time. Treat tests and repository state as backpressure, preserve regressions, diagnose failures before retrying, and continue until the acceptance behavior is verified or a concrete blocker is proven. Model text and process exit alone are never completion evidence."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "logic-cli",
+      "surface": "logic-cli",
+      "goal_family": "contained-logic-cli",
+      "size": "small",
+      "base_dir": "tasks/logic-cli/repo",
+      "oracle_dir": "tasks/logic-cli/oracle",
+      "prompt": "Fix the next-action selector. When all required checks pass, implemented-not-verified must return { kind: \"promote-local-verification\" }, locally-verified work targeting closure must return { kind: \"request-protected-verification\" }, and closure-verified work targeting delivery must return { kind: \"request-delivery-verification\" }. Preserve failed-check diagnosis, missing-check selection, completed-target termination, validation errors, and the stdin JSON CLI contract. Do not weaken or delete tests.",
+      "visible_checks": [
+        { "id": "visible-regressions", "command": "node", "args": ["--test"] }
+      ],
+      "grader": {
+        "id": "hidden-transition-targets",
+        "command": "node",
+        "args": ["{manifest_dir}/tasks/logic-cli/grader.mjs", "{workspace}"],
+        "artifacts": ["{manifest_dir}/tasks/logic-cli/grader.mjs"]
+      }
+    },
+    {
+      "id": "data-async",
+      "surface": "data-async",
+      "goal_family": "cross-file-data-async",
+      "size": "medium",
+      "base_dir": "tasks/data-async/repo",
+      "oracle_dir": "tasks/data-async/oracle",
+      "prompt": "Make the file-backed JobStore safe for concurrent workers. Exactly one claimant may lease a ready job; an expired lease may be reclaimed with an incremented generation; only the current lease token may complete it; and writes must not leave malformed state. Preserve the existing public API and single-worker behavior. Use bounded contention handling and do not weaken or delete tests.",
+      "visible_checks": [
+        { "id": "visible-regressions", "command": "node", "args": ["--test"] }
+      ],
+      "grader": {
+        "id": "hidden-concurrency-fencing",
+        "command": "node",
+        "args": ["{manifest_dir}/tasks/data-async/grader.mjs", "{workspace}"],
+        "artifacts": ["{manifest_dir}/tasks/data-async/grader.mjs"]
+      }
+    },
+    {
+      "id": "ui-real-api",
+      "surface": "ui-api",
+      "goal_family": "ui-real-first-party-api",
+      "size": "medium",
+      "base_dir": "tasks/ui-real-api/repo",
+      "oracle_dir": "tasks/ui-real-api/oracle",
+      "prompt": "Repair the Orders page against the real first-party API contract. Render order_id and total_cents correctly, preserve loading and error behavior, bind the UI request to a per-load nonce, and reject a response whose request_nonce does not match. Do not change the server response shape or replace the real request with a mock. Run the visible tests and inspect the browser-facing code.",
+      "visible_checks": [
+        { "id": "visible-server-contract", "command": "node", "args": ["--test"] }
+      ],
+      "grader": {
+        "id": "hidden-real-browser-api",
+        "command": "node",
+        "args": ["{manifest_dir}/tasks/ui-real-api/grader.mjs", "{workspace}"],
+        "artifacts": ["{manifest_dir}/tasks/ui-real-api/grader.mjs"]
+      }
+    },
+    {
+      "id": "security-config",
+      "surface": "security-config",
+      "goal_family": "security-configuration-boundary",
+      "size": "small",
+      "base_dir": "tasks/security-config/repo",
+      "oracle_dir": "tasks/security-config/oracle",
+      "prompt": "Harden loadPublicConfig. Accept only a direct JSON filename inside the configured root, reject absolute and traversal paths, prevent realpath escape, require a valid HTTPS API base except localhost development, validate the features object, and return only the documented public fields. Environment secrets and unknown file keys must never be exposed. Preserve valid and missing-file behavior and do not weaken tests.",
+      "visible_checks": [
+        { "id": "visible-regressions", "command": "node", "args": ["--test"] }
+      ],
+      "grader": {
+        "id": "hidden-config-boundary",
+        "command": "node",
+        "args": ["{manifest_dir}/tasks/security-config/grader-v2.mjs", "{workspace}"],
+        "artifacts": ["{manifest_dir}/tasks/security-config/grader-v2.mjs"]
+      }
+    }
+  ]
+}

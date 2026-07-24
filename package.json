@@ -1,6 +1,6 @@
 {
   "name": "vision-framework",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "description": "Vision is a portable Codex plugin and proof harness for evidence-driven software delivery.",
@@ -17,6 +17,17 @@
     "evaluate:pilot": "node scripts/run-evaluation.mjs",
     "evaluate": "npm run evaluate:pilot",
     "evaluate:pilot:current": "node scripts/run-evaluation.mjs --use-report proof/mechanical-report.json",
+    "campaign": "node plugins/vision/scripts/vision-campaign.mjs",
+    "campaign:init": "node plugins/vision/scripts/vision-campaign.mjs init --manifest evaluation/campaign/manifest.local.json --root .agentic/campaigns/vision-local-tuning-20260716-v1",
+    "campaign:preflight": "node plugins/vision/scripts/vision-campaign.mjs preflight --root .agentic/campaigns/vision-local-tuning-20260716-v1",
+    "campaign:run": "node plugins/vision/scripts/vision-campaign.mjs run --root .agentic/campaigns/vision-local-tuning-20260716-v1",
+    "campaign:resume": "node plugins/vision/scripts/vision-campaign.mjs resume --root .agentic/campaigns/vision-local-tuning-20260716-v1",
+    "campaign:status": "node plugins/vision/scripts/vision-campaign.mjs status --root .agentic/campaigns/vision-local-tuning-20260716-v1",
+    "campaign:verify": "node plugins/vision/scripts/vision-campaign.mjs verify --root .agentic/campaigns/vision-local-tuning-20260716-v1",
+    "campaign:smoke:init": "node plugins/vision/scripts/vision-campaign.mjs init --manifest evaluation/campaign/manifest.smoke.local.json --root .agentic/campaigns/vision-real-smoke-v4",
+    "campaign:smoke:preflight": "node plugins/vision/scripts/vision-campaign.mjs preflight --root .agentic/campaigns/vision-real-smoke-v4",
+    "campaign:smoke:run": "node plugins/vision/scripts/vision-campaign.mjs run --root .agentic/campaigns/vision-real-smoke-v4",
+    "campaign:smoke:verify": "node plugins/vision/scripts/vision-campaign.mjs verify --root .agentic/campaigns/vision-real-smoke-v4",
     "validate": "npm run test && npm run portability && npm run proof"
   },
   "devDependencies": {

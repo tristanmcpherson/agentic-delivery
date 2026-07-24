@@ -4,6 +4,8 @@
 
 For new contracted work, Vision performs evidence-backed discovery before candidate edits and persistent-goal creation. Direct research handles one bounded question; one to three read-only scouts may handle independent, context-heavy questions. The main agent resolves contradictions and material choices, freezes a schema-v3 task contract, and uses its canonical `goal_spec` as the persistent objective.
 
+Naturally decomposable work may also freeze an optional `execution_graph`. Its nodes and artifact edges schedule builder-side work only: independent read-only or worktree-isolated nodes may fan out, shared writers remain serial, and required failures block fan-in. The graph is part of the contract identity but never substitutes for a required check, protected verifier, approval, or delivery controller.
+
 The harness can reject structurally incomplete intake, unresolved material questions, declared write-capable scouts, raw transcript fields, false capability fallbacks, synthesis drift, and goal/acceptance mismatch. It cannot prove from self-reported JSON that delegation occurred, that a scout made no write, or that a goal tool was invoked after synthesis. Those claims require model trace inspection and before/after workspace auditing in the held-out evaluation.
 
 Scouts and persistent goals remain builder-side orchestration. They are not verifier principals, do not grant approval, and do not change the evidence required for an honest completion state.

@@ -1,0 +1,100 @@
+{
+  "schema_version": 3,
+  "contract_version": 1,
+  "task_id": "PROOF-EXECUTION-GRAPH-CYCLE",
+  "title": "Reject a cyclic execution graph",
+  "planning": { "size": "M", "size_source": "inferred", "confidence": "high" },
+  "intake": {
+    "status": "ready",
+    "research_mode": "direct",
+    "mode_reason": "The fixture has one bounded local orchestration question.",
+    "capabilities": { "subagents": "available", "goal": "authorized" },
+    "questions": [
+      {
+        "id": "RQ-GRAPH",
+        "question": "Can the declared graph converge?",
+        "material": true,
+        "status": "resolved",
+        "conclusion": "The fixture intentionally declares mutually dependent nodes.",
+        "confidence": "high",
+        "evidence_refs": ["repo:proof/tasks/execution-graph-cycle.json:1"]
+      }
+    ],
+    "scouts": [],
+    "conflicts": [],
+    "assumptions": [],
+    "unresolved_material": [],
+    "synthesis": {
+      "outcome": "Cyclic execution graphs are rejected before work begins.",
+      "requirements": ["Reject an execution graph with no source node."],
+      "constraints": ["Do not reinterpret an unbounded cycle as a repair loop."],
+      "non_goals": ["Execute the invalid graph."],
+      "risk_flags": ["logic"],
+      "acceptance_ids": ["AC-GRAPH"]
+    }
+  },
+  "goal_spec": {
+    "objective": "Cyclic execution graphs are rejected before work begins.",
+    "acceptance_ids": ["AC-GRAPH"],
+    "completion_target": "locally-verified",
+    "persistence": "goal-tool",
+    "mechanism": "create_goal"
+  },
+  "execution_graph": {
+    "schema_version": 1,
+    "max_parallel": 2,
+    "nodes": [
+      {
+        "id": "a",
+        "kind": "reduce",
+        "executor": "deterministic-code",
+        "description": "Consume B output.",
+        "criterion_ids": ["AC-GRAPH"],
+        "inputs": ["b-output"],
+        "outputs": ["a-output"],
+        "isolation": "read-only",
+        "write_scope": []
+      },
+      {
+        "id": "b",
+        "kind": "reduce",
+        "executor": "deterministic-code",
+        "description": "Consume A output.",
+        "criterion_ids": ["AC-GRAPH"],
+        "inputs": ["a-output"],
+        "outputs": ["b-output"],
+        "isolation": "read-only",
+        "write_scope": []
+      }
+    ],
+    "edges": [
+      { "from": "a", "to": "b", "artifact": "a-output", "artifact_type": "data" },
+      { "from": "b", "to": "a", "artifact": "b-output", "artifact_type": "data" }
+    ],
+    "convergence": {
+      "max_repair_rounds": 2,
+      "no_progress_limit": 2,
+      "dedupe_scope": "all-seen",
+      "required_failure": "block"
+    }
+  },
+  "risk_gate_version": 1,
+  "risk_flags": ["logic"],
+  "acceptance": [
+    { "id": "AC-GRAPH", "surface": "logic", "behavior": "The graph planner rejects cyclic dependencies." }
+  ],
+  "checks": [
+    {
+      "id": "graph-validator",
+      "criterion_ids": ["AC-GRAPH"],
+      "claim_scope": "Execution graph validation.",
+      "stage": "fast",
+      "command": "node --test test/execution-graph.test.mjs",
+      "required": true,
+      "risk_flags": ["logic"],
+      "artifacts": {}
+    }
+  ],
+  "approval_boundaries": [],
+  "evidence_expires_on": ["contract-change", "harness-change"]
+}

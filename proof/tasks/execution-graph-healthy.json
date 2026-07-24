@@ -1,0 +1,111 @@
+{
+  "schema_version": 3,
+  "contract_version": 1,
+  "task_id": "PROOF-EXECUTION-GRAPH-HEALTHY",
+  "title": "Plan a bounded parser implementation graph",
+  "planning": { "size": "M", "size_source": "inferred", "confidence": "high" },
+  "intake": {
+    "status": "ready",
+    "research_mode": "direct",
+    "mode_reason": "The fixture has one bounded local orchestration question.",
+    "capabilities": { "subagents": "available", "goal": "authorized" },
+    "questions": [
+      {
+        "id": "RQ-GRAPH",
+        "question": "Which bounded work and review nodes can run independently before integration?",
+        "material": true,
+        "status": "resolved",
+        "conclusion": "Implementation and read-only test audit can run independently, then feed one serialized integration node.",
+        "confidence": "high",
+        "evidence_refs": ["repo:proof/fixture/profile.test.mjs:1"]
+      }
+    ],
+    "scouts": [],
+    "conflicts": [],
+    "assumptions": [],
+    "unresolved_material": [],
+    "synthesis": {
+      "outcome": "The profile parser implementation is produced through a bounded dependency graph.",
+      "requirements": ["Use typed handoffs and preserve the focused parser contract."],
+      "constraints": ["Parallel writes require worktree isolation and required failures block fan-in."],
+      "non_goals": ["Claim protected verifier authority from builder orchestration."],
+      "risk_flags": ["logic"],
+      "acceptance_ids": ["AC-PARSER"]
+    }
+  },
+  "goal_spec": {
+    "objective": "The profile parser implementation is produced through a bounded dependency graph.",
+    "acceptance_ids": ["AC-PARSER"],
+    "completion_target": "locally-verified",
+    "persistence": "goal-tool",
+    "mechanism": "create_goal"
+  },
+  "execution_graph": {
+    "schema_version": 1,
+    "max_parallel": 2,
+    "nodes": [
+      {
+        "id": "implement-parser",
+        "kind": "work",
+        "executor": "agentic-builder",
+        "description": "Implement and focus-test the parser change.",
+        "criterion_ids": ["AC-PARSER"],
+        "inputs": ["contract:AC-PARSER"],
+        "outputs": ["parser-candidate"],
+        "isolation": "worktree",
+        "write_scope": ["proof/fixture/profile.mjs", "proof/fixture/profile.test.mjs"]
+      },
+      {
+        "id": "audit-test-gap",
+        "kind": "review",
+        "executor": "agentic-gap-reviewer",
+        "description": "Audit the parser acceptance and focused-test gap without editing.",
+        "criterion_ids": ["AC-PARSER"],
+        "inputs": ["contract:AC-PARSER"],
+        "outputs": ["test-gap-review"],
+        "isolation": "read-only",
+        "write_scope": []
+      },
+      {
+        "id": "integrate-parser",
+        "kind": "work",
+        "executor": "primary",
+        "description": "Integrate the candidate with the review result and run the required check.",
+        "criterion_ids": ["AC-PARSER"],
+        "inputs": ["parser-candidate", "test-gap-review"],
+        "outputs": ["integrated-parser-candidate"],
+        "isolation": "shared",
+        "write_scope": ["proof/fixture"]
+      }
+    ],
+    "edges": [
+      { "from": "implement-parser", "to": "integrate-parser", "artifact": "parser-candidate", "artifact_type": "candidate" },
+      { "from": "audit-test-gap", "to": "integrate-parser", "artifact": "test-gap-review", "artifact_type": "review" }
+    ],
+    "convergence": {
+      "max_repair_rounds": 2,
+      "no_progress_limit": 2,
+      "dedupe_scope": "all-seen",
+      "required_failure": "block"
+    }
+  },
+  "risk_gate_version": 1,
+  "risk_flags": ["logic"],
+  "acceptance": [
+    { "id": "AC-PARSER", "surface": "logic", "behavior": "The parser returns the declared display value." }
+  ],
+  "checks": [
+    {
+      "id": "profile-parser",
+      "criterion_ids": ["AC-PARSER"],
+      "claim_scope": "Focused profile parser behavior.",
+      "stage": "fast",
+      "command": "node --test proof/fixture/profile.test.mjs",
+      "required": true,
+      "risk_flags": ["logic"],
+      "artifacts": {}
+    }
+  ],
+  "approval_boundaries": [],
+  "evidence_expires_on": ["candidate-change", "contract-change", "harness-change"]
+}

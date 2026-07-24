@@ -1,13 +1,23 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "name": "vision-adversarial-pilot",
   "default_repetitions": 1,
+  "report_max_age_seconds": 3600,
+  "expectation_rules": {
+    "healthy": { "process": "success", "output": "match" },
+    "defect": { "process": "failure", "output": "match" },
+    "control": { "process": "success", "output": "match" }
+  },
   "cases": [
     { "id": "discovery-contract-healthy", "kind": "healthy", "category": "discovery-contract", "critical": false },
     { "id": "goal-spec-bound", "kind": "healthy", "category": "goal-contract-binding", "critical": false },
     { "id": "discovery-material-unresolved", "kind": "defect", "category": "requirements-integrity", "critical": true },
     { "id": "discovery-scout-write", "kind": "defect", "category": "scout-boundary", "critical": true },
     { "id": "goal-contract-drift", "kind": "defect", "category": "goal-contract-binding", "critical": true },
+    { "id": "execution-graph-contract", "kind": "healthy", "category": "execution-graph", "critical": false },
+    { "id": "execution-graph-plan", "kind": "healthy", "category": "execution-graph", "critical": false },
+    { "id": "execution-graph-cycle", "kind": "defect", "category": "execution-graph", "critical": true },
+    { "id": "execution-graph-authority", "kind": "defect", "category": "verifier-authority", "critical": true },
     { "id": "goal-intent-required", "kind": "defect", "category": "goal-contract-binding", "critical": true },
     { "id": "risk-gate-missing", "kind": "defect", "category": "risk-gate-integrity", "critical": true },
     { "id": "risk-gate-fast-bypass", "kind": "defect", "category": "risk-gate-integrity", "critical": true },
@@ -32,9 +42,8 @@
     { "id": "production-approved", "kind": "healthy", "category": "approval", "critical": false }
   ],
   "thresholds": {
-    "critical_false_completions_max": 0,
-    "defect_detection_recall_min": 1,
-    "healthy_false_block_rate_max": 0,
+    "critical_case_nonconformances_max": 0,
+    "case_conformance_min": 1,
     "case_coverage_min": 1
   }
 }

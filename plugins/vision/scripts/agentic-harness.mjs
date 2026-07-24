@@ -6,6 +6,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { buildExecutionPlan, validateExecutionGraph } from "./execution-graph.mjs";
 
 const STAGES = new Set(["fast", "integration", "ui", "post-deploy"]);
 const PROFILE_KINDS = new Set(["mocked", "local-real", "mixed", "staging", "production"]);
@@ -148,14 +149,17 @@ async function resolveTaskPath(root, taskArg) {
   if (!taskArg) throw new Error("Pass --task <task-id-or-json-path>.");
   const direct = path.resolve(root, taskArg);
   if (await exists(direct)) return direct;
-  const named = path.resolve(root, ".agentic", "tasks", taskArg.endsWith(".json") ? taskArg : `${taskArg}.json`);
+  const named = path.resolve(root, ".vision", "tasks", taskArg.endsWith(".json") ? taskArg : `${taskArg}.json`);
   if (await exists(named)) return named;
+  const legacy = path.resolve(root, ".agentic", "tasks", taskArg.endsWith(".json") ? taskArg : `${taskArg}.json`);
+  if (await exists(legacy)) return legacy;
   throw new Error(`Task contract not found: ${taskArg}`);
 }
 
 async function loadContext(args) {
   const root = path.resolve(String(args.root || process.cwd()));
-  const configPath = path.resolve(root, String(args.config || ".agentic/config.json"));
+  const preferredConfigPath = path.resolve(root, String(args.config || ".vision/config.json"));
+  const configPath = await exists(preferredConfigPath) || args.config ? preferredConfigPath : path.resolve(root, ".agentic/config.json");
   if (!(await exists(configPath))) throw new Error(`Configuration not found: ${configPath}`);
   const config = applyAuthorityEnvironment(await readJson(configPath));
   validateConfig(config);
@@ -187,6 +191,7 @@ export function validateConfig(config) {
     const orchestration = config.orchestration;
     for (const [field, fallback, minimum, maximum] of [
       ["max_scouts", 3, 1, 3],
+      ["max_parallel_nodes", 3, 1, 3],
       ["max_review_retries", 2, 0, 3],
       ["max_no_progress_resumes", 2, 1, 5],
       ["max_authorization_failures", 3, 1, 5],
@@ -198,6 +203,7 @@ export function validateConfig(config) {
     if (orchestration.allow_recursive_subagents !== undefined && orchestration.allow_recursive_subagents !== false) errors.push("orchestration.allow_recursive_subagents must remain false");
     for (const field of ["telemetry", "auto_update", "auto_merge"]) if (orchestration[field] !== undefined && orchestration[field] !== false) errors.push(`orchestration.${field} must remain false`);
     if (orchestration.hooks !== undefined && (orchestration.hooks?.authority !== "advisory" || orchestration.hooks?.network !== "disabled")) errors.push("orchestration hooks must remain advisory with network disabled");
+    if (orchestration.hooks?.offer_vision_on_engineering_outcome !== undefined && typeof orchestration.hooks.offer_vision_on_engineering_outcome !== "boolean") errors.push("orchestration hooks offer_vision_on_engineering_outcome must be boolean");
     if (orchestration.reviews !== undefined && (orchestration.reviews?.authority !== "builder-side-advisory" || orchestration.reviews?.inconclusive !== "fail")) errors.push("orchestration reviews must remain builder-side-advisory and fail on inconclusive verdicts");
   }
   if (!config.profiles || typeof config.profiles !== "object") errors.push("config.profiles must be an object");
@@ -215,7 +221,7 @@ export function validateConfig(config) {
       errors.push(`production profile ${name} must set requires_approval=true`);
     }
   }
-  if (errors.length) throw new Error(`Invalid .agentic/config.json:\n- ${errors.join("\n- ")}`);
+  if (errors.length) throw new Error(`Invalid .vision/config.json:\n- ${errors.join("\n- ")}`);
 }
 
 export function validateTask(task, config) {
@@ -235,6 +241,13 @@ export function validateTask(task, config) {
     if (!SURFACES.has(criterion.surface)) errors.push(`criterion ${criterion.id} has invalid surface`);
     if (!criterion.behavior) errors.push(`criterion ${criterion.id} requires observable behavior`);
     criteria.set(criterion.id, criterion);
+  }
+
+  if (task.execution_graph !== undefined) {
+    errors.push(...validateExecutionGraph(task.execution_graph, {
+      acceptanceIds: [...criteria.keys()],
+      maxParallel: config.orchestration?.max_parallel_nodes ?? 3,
+    }));
   }
 
   const checks = new Map();
@@ -600,7 +613,12 @@ function resolveProfile(config, name, extraEnv = {}) {
 }
 
 async function harnessHash() {
-  return hashValue(await fs.readFile(fileURLToPath(import.meta.url)));
+  const harnessFile = fileURLToPath(import.meta.url);
+  const executionGraphFile = fileURLToPath(new URL("./execution-graph.mjs", import.meta.url));
+  return hashValue({
+    harness_sha256: hashValue(await fs.readFile(harnessFile)),
+    execution_graph_sha256: hashValue(await fs.readFile(executionGraphFile)),
+  });
 }
 
 async function trustedPublicKeyFrom(context, trust, label) {
@@ -661,7 +679,7 @@ function profileDefinitionHashes(context) {
 async function evidenceIdentity(context) {
   return {
     contract_hash: hashValue(context.task),
-    workspace_fingerprint: await workspaceFingerprint(context.root, context.config.evidence_root || ".agentic/evidence"),
+    workspace_fingerprint: await workspaceFingerprint(context.root, context.config.evidence_root || ".vision/evidence"),
     config_hash: await effectiveConfigHash(context),
     harness_hash: await harnessHash(),
     profile_definition_hashes: profileDefinitionHashes(context),
@@ -924,9 +942,14 @@ async function collectArtifacts(checkDir, check, profile, config, env) {
   const attestationDir = path.join(checkDir, "attestations");
   const attestationFiles = (await walkFiles(attestationDir)).filter((file) => file.endsWith(".json"));
   const attestations = [];
+  const attestationHashes = {};
   const errors = [];
   for (const file of attestationFiles) {
-    try { attestations.push({ file, data: await readJson(file) }); }
+    try {
+      const content = await fs.readFile(file);
+      attestations.push({ file, data: JSON.parse(content.toString("utf8")) });
+      attestationHashes[file] = hashValue(content);
+    }
     catch (error) { errors.push(error.message); }
   }
   if (check.artifacts?.attestation && attestations.length === 0) errors.push("required runtime attestation is missing");
@@ -945,8 +968,13 @@ async function collectArtifacts(checkDir, check, profile, config, env) {
 
   const testManifestFile = path.join(checkDir, "test-manifest.json");
   let testManifest = null;
+  let testManifestHash = null;
   if (await exists(testManifestFile)) {
-    try { testManifest = await readJson(testManifestFile); }
+    try {
+      const content = await fs.readFile(testManifestFile);
+      testManifest = JSON.parse(content.toString("utf8"));
+      testManifestHash = hashValue(content);
+    }
     catch (error) { errors.push(error.message); }
   }
   if (check.artifacts?.test_integrity) {
@@ -964,8 +992,13 @@ async function collectArtifacts(checkDir, check, profile, config, env) {
 
   const systemAttestationFile = env.AGENTIC_SYSTEM_ATTESTATION;
   let systemAttestation = null;
+  let systemAttestationHash = null;
   if (await exists(systemAttestationFile)) {
-    try { systemAttestation = await readJson(systemAttestationFile); }
+    try {
+      const content = await fs.readFile(systemAttestationFile);
+      systemAttestation = JSON.parse(content.toString("utf8"));
+      systemAttestationHash = hashValue(content);
+    }
     catch (error) { errors.push(error.message); }
   }
   if (check.artifacts?.system_attestation) errors.push(...validateSystemAttestation(systemAttestation, check, env));
@@ -1041,11 +1074,14 @@ async function collectArtifacts(checkDir, check, profile, config, env) {
   return {
     errors,
     attestation_files: attestationFiles,
+    attestation_hashes: attestationHashes,
     screenshots: existingScreenshots,
     screenshot_hashes: screenshotHashes,
     test_manifest: testManifest ? testManifestFile : null,
+    test_manifest_sha256: testManifestHash,
     test_integrity: testManifest,
     system_attestation: systemAttestation ? systemAttestationFile : null,
+    system_attestation_sha256: systemAttestationHash,
     system_attestation_data: systemAttestation,
     console_errors: consoleErrors,
     page_errors: pageErrors,
@@ -1141,11 +1177,14 @@ async function executeCheck(context, check, runDir, approval) {
       stdout: path.join(checkDir, "stdout.log"),
       stderr: path.join(checkDir, "stderr.log"),
       attestations: artifacts.attestation_files,
+      attestation_hashes: artifacts.attestation_hashes,
       screenshots: artifacts.screenshots,
       screenshot_hashes: artifacts.screenshot_hashes,
       test_manifest: artifacts.test_manifest,
+      test_manifest_sha256: artifacts.test_manifest_sha256,
       test_integrity: artifacts.test_integrity,
       system_attestation: artifacts.system_attestation,
+      system_attestation_sha256: artifacts.system_attestation_sha256,
       system_attestation_data: artifacts.system_attestation_data,
       business_flow_provenance: artifacts.business_flow_provenance,
     },
@@ -1154,7 +1193,7 @@ async function executeCheck(context, check, runDir, approval) {
 }
 
 function evidenceBase(context) {
-  return path.resolve(context.root, context.config.evidence_root || ".agentic/evidence", slug(context.task.task_id));
+  return path.resolve(context.root, context.config.evidence_root || ".vision/evidence", slug(context.task.task_id));
 }
 
 async function loadIndex(context) {
@@ -1178,6 +1217,66 @@ async function readRuns(context) {
     if (await exists(file)) runs.push({ file, data: await readJson(file) });
   }
   return runs;
+}
+
+async function verifyFileHash(file, expectedHash, label) {
+  if (!file || typeof file !== "string" || !path.isAbsolute(file)) return [`${label} does not have an absolute recorded path`];
+  if (!SHA256_PATTERN.test(String(expectedHash || ""))) return [`${label} does not have a valid recorded SHA-256: ${file}`];
+  if (!(await exists(file))) return [`${label} is missing: ${file}`];
+  const currentHash = hashValue(await fs.readFile(file));
+  return currentHash === expectedHash ? [] : [`${label} changed after evidence capture: ${file}`];
+}
+
+async function capturedArtifactVerdict(check, result) {
+  const artifacts = result?.artifacts || {};
+  const errors = [];
+  if (check.artifacts?.attestation && (!Array.isArray(artifacts.attestations) || artifacts.attestations.length === 0)) errors.push("required runtime attestation binding is missing");
+  const minimumScreenshots = Number(check.artifacts?.screenshots_min || 0);
+  if (minimumScreenshots > 0 && (!Array.isArray(artifacts.screenshots) || artifacts.screenshots.length < minimumScreenshots)) errors.push(`required ${minimumScreenshots} screenshot binding(s) are missing`);
+  if (check.artifacts?.test_integrity && !artifacts.test_manifest) errors.push("required test-integrity manifest binding is missing");
+  if (check.artifacts?.system_attestation && !artifacts.system_attestation) errors.push("required system attestation binding is missing");
+  for (const file of artifacts.attestations || []) {
+    errors.push(...await verifyFileHash(file, artifacts.attestation_hashes?.[file], "runtime attestation"));
+  }
+  for (const file of artifacts.screenshots || []) {
+    errors.push(...await verifyFileHash(file, artifacts.screenshot_hashes?.[file], "screenshot"));
+  }
+  if (artifacts.test_manifest) {
+    errors.push(...await verifyFileHash(artifacts.test_manifest, artifacts.test_manifest_sha256, "test-integrity manifest"));
+  }
+  if (artifacts.system_attestation) {
+    errors.push(...await verifyFileHash(artifacts.system_attestation, artifacts.system_attestation_sha256, "system attestation"));
+  }
+  return { state: errors.length ? "stale" : "pass", errors };
+}
+
+function reviewBinding(run, checkId) {
+  return {
+    task_id: run.data.task_id,
+    contract_version: run.data.contract_version,
+    contract_hash: run.data.contract_hash,
+    run_id: run.data.run_id,
+    check_id: checkId,
+    candidate_id: run.data.candidate_id,
+    workspace_fingerprint: run.data.workspace_fingerprint,
+    config_hash: run.data.config_hash,
+    harness_hash: run.data.harness_hash,
+  };
+}
+
+async function visualReviewVerdict(check, run, result) {
+  if (!check.artifacts?.visual_review) return { state: "not-required", errors: [] };
+  const review = result.visual_review;
+  if (!review || review.status === "pending") return { state: "pending", errors: [] };
+  const errors = [];
+  if (review.status !== "pass") errors.push(`visual-review verdict was ${review.status}`);
+  if (stableStringify(review.binding) !== stableStringify(reviewBinding(run, check.id))) errors.push("visual-review binding does not match the current attempt");
+  if (!Array.isArray(review.images) || review.images.length === 0) errors.push("visual review has no hash-bound images");
+  for (const image of review.images || []) {
+    if (result.artifacts?.screenshot_hashes?.[image.path] !== image.sha256) errors.push(`visual-review image hash does not match captured evidence: ${image.path}`);
+    errors.push(...await verifyFileHash(image.path, image.sha256, "visual-review image"));
+  }
+  return { state: errors.length ? "fail" : "pass", errors };
 }
 
 async function currentArtifactFiles(result) {
@@ -1216,18 +1315,10 @@ async function advisoryReviewVerdict(context, check, run, result) {
     if (!review) return { state: "pending", errors: [`required advisory review lane is missing: ${lane}`] };
     errors.push(...validateAdvisoryReviewInput(review, check, context.task, context.config).map((error) => `${lane}: ${error}`));
     if (review.authority !== "builder-side-advisory") errors.push(`${lane}: authority must remain builder-side-advisory`);
-    const expectedBinding = {
-      task_id: run.data.task_id,
-      contract_version: run.data.contract_version,
-      contract_hash: run.data.contract_hash,
-      run_id: run.data.run_id,
-      check_id: check.id,
-      candidate_id: run.data.candidate_id,
-      workspace_fingerprint: run.data.workspace_fingerprint,
-      config_hash: run.data.config_hash,
-      harness_hash: run.data.harness_hash,
-    };
+    const expectedBinding = reviewBinding(run, check.id);
     if (stableStringify(review.binding) !== stableStringify(expectedBinding)) errors.push(`${lane}: review binding does not match the current attempt`);
+    if (!review.input_file) errors.push(`${lane}: structured review input is not hash-bound`);
+    else errors.push(...(await verifyFileHash(review.input_file.path, review.input_file.sha256, `${lane} input`)).map((error) => error.replace(`${lane} input changed after evidence capture`, `${lane} input changed after review`)));
     for (const artifact of review.artifacts || []) {
       if (!allowedFiles.has(artifact.path)) {
         errors.push(`${lane}: reviewed artifact is not part of the current attempt: ${artifact.path}`);
@@ -1280,10 +1371,17 @@ async function buildStatus(context, options = {}) {
     let state = "missing";
     let verifierAuthorized = false;
     let authorizationError = null;
+    let evidenceIntegrityErrors = [];
+    let visualReviewErrors = [];
     let advisoryReviewErrors = [];
     if (!latest && allResults.length) state = "stale";
     if (latest) {
       state = latest.result.status;
+      if (state === "pass") {
+        const verdict = await capturedArtifactVerdict(check, latest.result);
+        evidenceIntegrityErrors = verdict.errors;
+        if (verdict.state === "stale") state = "stale";
+      }
       if (context.config.authority?.mode === "verifier") {
         const cacheKey = latest.run.file;
         if (!authorizationCache.has(cacheKey)) authorizationCache.set(cacheKey, await verifierRunAuthorization(context, latest.run));
@@ -1292,7 +1390,12 @@ async function buildStatus(context, options = {}) {
         authorizationError = verdict.error || null;
         if (state === "pass" && !verifierAuthorized) state = "unauthorized";
       }
-      if (state === "pass" && check.artifacts?.visual_review && latest.result.visual_review?.status !== "pass") state = latest.result.visual_review?.status === "fail" ? "fail" : "pending-visual-review";
+      if (state === "pass" && check.artifacts?.visual_review) {
+        const verdict = await visualReviewVerdict(check, latest.run, latest.result);
+        visualReviewErrors = verdict.errors;
+        if (verdict.state === "pending") state = "pending-visual-review";
+        else if (verdict.state === "fail") state = "fail";
+      }
       if (state === "pass" && check.artifacts?.visual_review && context.config.authority?.mode === "verifier" && latest.result.visual_review?.authority === "builder-agent") state = "pending-visual-review";
       if (state === "pass" && check.artifacts?.advisory_reviews) {
         const verdict = await advisoryReviewVerdict(context, check, latest.run, latest.result);
@@ -1308,6 +1411,8 @@ async function buildStatus(context, options = {}) {
       evidence_authority: latest?.run.data.authority || null,
       verifier_authorized: verifierAuthorized,
       authorization_error: authorizationError,
+      evidence_integrity_errors: evidenceIntegrityErrors,
+      visual_review_errors: visualReviewErrors,
       advisory_review_errors: advisoryReviewErrors,
       candidate_id: latest?.run.data.candidate_id || null,
       result: latest?.result || null,
@@ -1315,25 +1420,31 @@ async function buildStatus(context, options = {}) {
     });
   }
   const required = checks.filter((check) => check.required);
-  const closureAuthorized = context.config.authority?.mode === "verifier" && required.length > 0 && required.every((check) => check.verifier_authorized);
-  const candidateIds = [...new Set(required.map((check) => check.candidate_id).filter(Boolean))];
-  const candidateId = candidateIds.length === 1 ? candidateIds[0] : null;
+  const candidateValues = required.map((check) => typeof check.candidate_id === "string" && check.candidate_id.trim() ? check.candidate_id : null);
+  const candidateIds = [...new Set(candidateValues.filter(Boolean))];
+  const candidateConsistent = required.length > 0 && candidateIds.length === 1 && candidateValues.every((candidate) => candidate === candidateIds[0]);
+  const candidateId = candidateConsistent ? candidateIds[0] : null;
+  const candidateError = candidateConsistent ? null : "Required evidence does not share one exact non-null candidate identity.";
+  const verifierEvidenceAuthorized = context.config.authority?.mode === "verifier" && required.length > 0 && required.every((check) => check.verifier_authorized);
+  const closureAuthorized = verifierEvidenceAuthorized && candidateConsistent;
   let overall = closureAuthorized ? "closure-verified" : "locally-verified";
   if (required.some((check) => check.state === "fail")) overall = "failed";
   else if (required.some((check) => ["missing", "pending-visual-review", "pending-advisory-review", "unauthorized"].includes(check.state))) overall = "incomplete";
   else if (required.some((check) => check.state === "stale")) overall = "stale";
+  else if (!candidateConsistent) overall = "stale";
   const criteria = context.task.acceptance.map((criterion) => {
     const related = checks.filter((check) => check.required && context.task.checks.find((source) => source.id === check.id)?.criterion_ids.includes(criterion.id));
-    return { id: criterion.id, behavior: criterion.behavior, status: related.every((check) => check.state === "pass") ? "pass" : "not-proven", checks: related.map((check) => ({ id: check.id, state: check.state })) };
+    return { id: criterion.id, behavior: criterion.behavior, status: candidateConsistent && related.every((check) => check.state === "pass") ? "pass" : "not-proven", checks: related.map((check) => ({ id: check.id, state: check.state })) };
   });
   const status = {
     schema_version: 2,
     task_id: context.task.task_id,
     contract_version: context.task.contract_version,
-    authority: closureAuthorized ? "verifier" : "local",
+    authority: verifierEvidenceAuthorized ? "verifier" : "local",
     requested_authority: context.config.authority?.mode || "local",
     overall_status: overall,
     candidate_id: candidateId,
+    candidate_error: candidateError,
     contract_hash: identity.contract_hash,
     workspace_fingerprint: identity.workspace_fingerprint,
     config_hash: identity.config_hash,
@@ -1396,6 +1507,33 @@ async function commandGoalSpec(args) {
   const goal = buildGoalSpec(context.task);
   if (args.json === true) console.log(JSON.stringify(goal, null, 2));
   else console.log(goal.objective);
+}
+
+async function commandGraphPlan(args) {
+  const context = await loadContext(args);
+  if (context.errors.length) throw new Error(`Invalid task contract:\n- ${context.errors.join("\n- ")}`);
+  if (!context.task.execution_graph) throw new Error("Task contract does not declare execution_graph.");
+  const completedNodeIds = typeof args.completed === "string"
+    ? args.completed.split(",").map((item) => item.trim()).filter(Boolean)
+    : [];
+  const plan = buildExecutionPlan(context.task.execution_graph, {
+    completedNodeIds,
+    acceptanceIds: context.task.acceptance.map((criterion) => criterion.id),
+    maxParallel: context.config.orchestration?.max_parallel_nodes ?? 3,
+  });
+  const output = {
+    schema_version: 1,
+    task_id: context.task.task_id,
+    contract_version: context.task.contract_version,
+    contract_hash: hashValue(context.task),
+    execution_graph_sha256: hashValue(context.task.execution_graph),
+    ...plan,
+  };
+  if (args.json === true) console.log(JSON.stringify(output, null, 2));
+  else {
+    console.log(`${output.task_id}: ${output.complete ? "execution graph complete" : `${output.remaining_node_ids.length} node(s) remaining`}.`);
+    for (const wave of output.waves) console.log(`WAVE ${wave.index}${wave.parallel ? " parallel" : " serial"}: ${wave.node_ids.join(", ")} (${wave.reason})`);
+  }
 }
 
 async function commandGrantRequest(args) {
@@ -1468,6 +1606,7 @@ async function commandRun(args) {
   }
   const verifier = await authorizeVerifierRun(context, args);
   const identity = await evidenceIdentity(context);
+  const candidateId = String(process.env.AGENTIC_CANDIDATE_ID || `workspace:${identity.workspace_fingerprint}`).trim();
   const base = evidenceBase(context);
   const runId = `${new Date().toISOString().replace(/[:.]/g, "-")}-${randomBytes(3).toString("hex")}`;
   const runDir = path.join(base, "runs", runId);
@@ -1484,7 +1623,7 @@ async function commandRun(args) {
     profile_definition_hashes: identity.profile_definition_hashes,
     authority: verifier ? "verifier" : "local",
     verifier_id: verifier?.authorization.verifier_id || null,
-    candidate_id: process.env.AGENTIC_CANDIDATE_ID || null,
+    candidate_id: candidateId,
     toolchain: identity.toolchain,
     verifier_authorization: verifier?.authorization || null,
     verifier_grant: verifier?.grant || null,
@@ -1556,7 +1695,8 @@ async function commandVisualReview(args) {
     observed_state: String(args["observed-state"]),
     anomalies: String(args.anomalies),
     images: reviewed.map((image) => ({ path: image, sha256: result.artifacts.screenshot_hashes[image] })),
-    notes: String(args.notes)
+    notes: String(args.notes),
+    binding: reviewBinding({ data: run }, args.check),
   };
   result.visual_review = review;
   const checkDir = result.artifacts.directory;
@@ -1577,6 +1717,7 @@ async function commandAdvisoryReview(args) {
   if (!check) throw new Error(`Unknown check ${args.check}.`);
   if (!check.artifacts?.advisory_reviews) throw new Error(`Check ${args.check} does not require advisory reviews.`);
   const inputFile = path.resolve(context.root, String(args.input));
+  const inputContent = await fs.readFile(inputFile);
   const input = await readJson(inputFile);
   const inputErrors = validateAdvisoryReviewInput(input, check, context.task, context.config);
   if (inputErrors.length) throw new Error(`Invalid advisory review:\n- ${inputErrors.join("\n- ")}`);
@@ -1602,6 +1743,7 @@ async function commandAdvisoryReview(args) {
     artifacts,
     recorded_at: new Date().toISOString(),
     input_sha256: hashValue(input),
+    input_file: { path: inputFile, sha256: hashValue(inputContent) },
     binding: {
       task_id: run.task_id,
       contract_version: run.contract_version,
@@ -1625,7 +1767,7 @@ async function commandAdvisoryReview(args) {
 
 async function commandDoctor(args) {
   const root = path.resolve(String(args.root || process.cwd()));
-  const configPath = path.resolve(root, String(args.config || ".agentic/config.json"));
+  const configPath = path.resolve(root, String(args.config || ".vision/config.json"));
   const checks = [];
   checks.push({ name: "Node.js >= 20", status: Number(process.versions.node.split(".")[0]) >= 20 ? "pass" : "fail", detail: process.versions.node });
   let config = null;
@@ -1640,8 +1782,9 @@ async function commandDoctor(args) {
 
   const orchestrationEnabled = Boolean(config?.orchestration);
   for (const [name, relative] of [
-    ["lifecycle controller", ".agentic/bin/agentic-lifecycle.mjs"],
-    ["project context", ".agentic/project-context.md"],
+    ["lifecycle controller", ".vision/bin/agentic-lifecycle.mjs"],
+    ["execution graph planner", ".vision/bin/execution-graph.mjs"],
+    ["project context", ".vision/project-context.md"],
     ["scout role", ".codex/agents/agentic-scout.toml"],
     ["builder role", ".codex/agents/agentic-builder.toml"],
     ["gap reviewer role", ".codex/agents/agentic-gap-reviewer.toml"],
@@ -1651,7 +1794,7 @@ async function commandDoctor(args) {
     checks.push({ name, status: await exists(file) ? "pass" : orchestrationEnabled ? "fail" : "optional", detail: await exists(file) ? file : `missing ${file}` });
   }
 
-  const taskDirectory = path.join(root, ".agentic", "tasks");
+  const taskDirectory = path.join(root, ".vision", "tasks");
   if (config && await exists(taskDirectory)) {
     const taskFiles = (await fs.readdir(taskDirectory)).filter((name) => name.endsWith(".json")).sort();
     let invalid = 0;
@@ -1664,7 +1807,7 @@ async function commandDoctor(args) {
     checks.push({ name: "task contracts", status: invalid ? "fail" : "pass", detail: `${taskFiles.length} contract(s), ${invalid} invalid` });
   } else checks.push({ name: "task contracts", status: "fail", detail: `missing ${taskDirectory}` });
 
-  const manifestFile = path.join(root, ".agentic", "install-manifest.json");
+  const manifestFile = path.join(root, ".vision", "install-manifest.json");
   if (await exists(manifestFile)) {
     try {
       const manifest = await readJson(manifestFile);
@@ -1684,7 +1827,7 @@ async function commandDoctor(args) {
     } catch (error) { checks.push({ name: "install ownership", status: "fail", detail: error.message }); }
   } else checks.push({ name: "install ownership", status: "optional", detail: "no repository installer manifest" });
 
-  const stateFile = path.join(root, ".agentic", "state", "active-task.json");
+  const stateFile = path.join(root, ".vision", "state", "active-task.json");
   if (await exists(stateFile)) {
     try {
       const state = await readJson(stateFile);
@@ -1705,6 +1848,7 @@ Commands:
   doctor [--config path] [--json]
   validate-task --task id-or-path
   goal-spec --task id-or-path [--json]
+  graph-plan --task id-or-path [--completed node-a,node-b] [--json]
   grant-request --task id-or-path [--output path]
   delivery-request --task id-or-path --target name --deployment-id id --approval-id id --approved-by actor --approved-at timestamp [--candidate id] [--output path]
   delivery-record --task id-or-path --attestation signed-delivery-attestation.json
@@ -1722,6 +1866,7 @@ export async function main(argv = process.argv.slice(2)) {
   if (command === "doctor") return commandDoctor(args);
   if (command === "validate-task") return commandValidateTask(args);
   if (command === "goal-spec") return commandGoalSpec(args);
+  if (command === "graph-plan") return commandGraphPlan(args);
   if (command === "grant-request") return commandGrantRequest(args);
   if (command === "delivery-request") return commandDeliveryRequest(args);
   if (command === "delivery-record") return commandDeliveryRecord(args);

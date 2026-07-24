@@ -6,7 +6,9 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-const MANIFEST_RELATIVE = ".agentic/install-manifest.json";
+const VISION_ROOT = ".vision";
+const LEGACY_ROOT = ".agentic";
+const MANIFEST_RELATIVE = `${VISION_ROOT}/install-manifest.json`;
 const MANIFEST_SCHEMA_VERSION = 1;
 
 function parse(argv) {
@@ -76,11 +78,25 @@ async function mappingsFor(pluginRoot, target) {
     mappings.push({ source, relative, destination: destinationFor(target, relative) });
   }
   for (const [sourceRelative, destinationRelative] of [
-    ["scripts/agentic.mjs", ".agentic/bin/agentic.mjs"],
-    ["scripts/agentic-harness.mjs", ".agentic/bin/agentic-harness.mjs"],
-    ["scripts/agentic-lifecycle.mjs", ".agentic/bin/agentic-lifecycle.mjs"],
-    ["scripts/sign-verifier-grant.mjs", ".agentic/bin/sign-verifier-grant.mjs"],
-    ["scripts/sign-delivery-attestation.mjs", ".agentic/bin/sign-delivery-attestation.mjs"],
+    ["scripts/agentic.mjs", `${VISION_ROOT}/bin/agentic.mjs`],
+    ["scripts/agentic-harness.mjs", `${VISION_ROOT}/bin/agentic-harness.mjs`],
+    ["scripts/execution-graph.mjs", `${VISION_ROOT}/bin/execution-graph.mjs`],
+    ["scripts/agentic-lifecycle.mjs", `${VISION_ROOT}/bin/agentic-lifecycle.mjs`],
+    ["scripts/harness-doctor.mjs", `${VISION_ROOT}/bin/harness-doctor.mjs`],
+    ["scripts/harness-doctor-config.mjs", `${VISION_ROOT}/bin/harness-doctor-config.mjs`],
+    ["scripts/harness-doctor-models.mjs", `${VISION_ROOT}/bin/harness-doctor-models.mjs`],
+    ["scripts/harness-doctor-plugins.mjs", `${VISION_ROOT}/bin/harness-doctor-plugins.mjs`],
+    ["scripts/harness-doctor-project.mjs", `${VISION_ROOT}/bin/harness-doctor-project.mjs`],
+    ["scripts/harness-doctor-skills.mjs", `${VISION_ROOT}/bin/harness-doctor-skills.mjs`],
+    ["scripts/harness-doctor-utils.mjs", `${VISION_ROOT}/bin/harness-doctor-utils.mjs`],
+    ["scripts/lifecycle-model.mjs", `${VISION_ROOT}/bin/lifecycle-model.mjs`],
+    ["scripts/lifecycle-state-store.mjs", `${VISION_ROOT}/bin/lifecycle-state-store.mjs`],
+    ["scripts/campaign-core.mjs", `${VISION_ROOT}/bin/campaign-core.mjs`],
+    ["scripts/campaign-report.mjs", `${VISION_ROOT}/bin/campaign-report.mjs`],
+    ["scripts/vision-campaign.mjs", `${VISION_ROOT}/bin/vision-campaign.mjs`],
+    ["scripts/vision-manager.mjs", `${VISION_ROOT}/bin/vision-manager.mjs`],
+    ["scripts/sign-verifier-grant.mjs", `${VISION_ROOT}/bin/sign-verifier-grant.mjs`],
+    ["scripts/sign-delivery-attestation.mjs", `${VISION_ROOT}/bin/sign-delivery-attestation.mjs`],
     ["assets/playwright/agentic-evidence.mjs", "tests/e2e/support/agentic-evidence.mjs"],
     ["assets/playwright/agentic-reporter.mjs", "tests/e2e/support/agentic-reporter.mjs"],
   ]) mappings.push({ source: path.join(pluginRoot, sourceRelative), relative: destinationRelative, destination: destinationFor(target, destinationRelative) });
@@ -194,10 +210,23 @@ export async function main(argv = process.argv.slice(2)) {
   const apply = args.apply === true;
   const force = args.force === true;
   const uninstall = args.uninstall === true;
+  const migrate = args.migrate === true;
   if (uninstall && force) throw new Error("--force is not used for uninstall; modified files are always preserved.");
+  if (migrate && uninstall) throw new Error("--migrate and --uninstall cannot be combined.");
   const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
   const plugin = await readJson(path.join(pluginRoot, ".codex-plugin", "plugin.json"));
   const manifestFile = destinationFor(target, MANIFEST_RELATIVE);
+  const legacyRoot = destinationFor(target, LEGACY_ROOT);
+  const visionRoot = destinationFor(target, VISION_ROOT);
+  if (migrate) {
+    if (!(await exists(legacyRoot))) throw new Error(`No legacy ${LEGACY_ROOT} directory exists in ${target}.`);
+    if (await exists(visionRoot)) throw new Error(`Refusing to migrate because ${VISION_ROOT} already exists in ${target}.`);
+    const action = { relative: `${LEGACY_ROOT} -> ${VISION_ROOT}`, action: apply ? "rename" : "would-rename", reason: "explicit Vision artifact namespace migration" };
+    if (apply) await fs.rename(legacyRoot, visionRoot);
+    const summary = { schema_version: 1, operation: "migrate", mode: apply ? "apply" : "preview", target, legacy_root: LEGACY_ROOT, vision_root: VISION_ROOT, actions: [action] };
+    if (args.json === true) console.log(JSON.stringify(summary, null, 2)); else console.log(`${apply ? "RENAMED" : "WOULD RENAME"} ${action.relative} - ${action.reason}`);
+    return summary;
+  }
   const manifest = await loadManifest(manifestFile, force);
   const actions = uninstall ? await planUninstall(target, manifest) : await planInstall(await mappingsFor(pluginRoot, target), manifest, force);
   if (apply) {

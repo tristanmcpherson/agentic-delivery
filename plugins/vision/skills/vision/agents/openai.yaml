@@ -1,4 +1,6 @@
 interface:
   display_name: "Vision"
-  short_description: "Research-first goals and evidence-bound delivery"
-  default_prompt: "Use $vision to reconcile the work-environment profile and any active contract or goal, research unresolved facts before goal creation, then execute bounded slices until the honest verified target or a stable blocker."
+  short_description: "Drive engineering work end to end with evidence"
+  default_prompt: "Take the user's stated engineering outcome end to end with Vision. Research and create or reconcile the canonical goal automatically, then implement, verify, diagnose, and reverify until locally-verified by default or the user's explicit target or a concrete blocker. The user does not need to repeat Vision's internal workflow."
+policy:
+  allow_implicit_invocation: true

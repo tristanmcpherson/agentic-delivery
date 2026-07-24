@@ -30,7 +30,7 @@
         "status": "resolved",
         "conclusion": "The shared-real profile forbids first-party mocks and exposes backend correlation.",
         "confidence": "high",
-        "evidence_refs": ["repo:.agentic/config.json:20"]
+        "evidence_refs": ["repo:.vision/config.json:20"]
       }
     ],
     "scouts": [
@@ -48,7 +48,7 @@
         "scope": "read-only",
         "status": "complete",
         "summary": "Confirmed the capable shared-real profile and required provenance signals.",
-        "evidence_refs": ["repo:.agentic/config.json:20"]
+        "evidence_refs": ["repo:.vision/config.json:20"]
       }
     ],
     "conflicts": [],
@@ -69,6 +69,55 @@
     "completion_target": "locally-verified",
     "persistence": "goal-tool",
     "mechanism": "available-goal-tool"
+  },
+  "execution_graph": {
+    "schema_version": 1,
+    "max_parallel": 2,
+    "nodes": [
+      {
+        "id": "service-slice",
+        "kind": "work",
+        "executor": "agentic-builder",
+        "description": "Implement and focus-test the service-side contract slice.",
+        "criterion_ids": ["AC-1"],
+        "inputs": ["contract:AC-1"],
+        "outputs": ["service-candidate"],
+        "isolation": "worktree",
+        "write_scope": ["src/service", "tests/service"]
+      },
+      {
+        "id": "ui-slice",
+        "kind": "work",
+        "executor": "agentic-builder",
+        "description": "Implement and focus-test the response-derived UI slice.",
+        "criterion_ids": ["AC-1"],
+        "inputs": ["contract:AC-1"],
+        "outputs": ["ui-candidate"],
+        "isolation": "worktree",
+        "write_scope": ["src/ui", "tests/ui"]
+      },
+      {
+        "id": "integrate",
+        "kind": "work",
+        "executor": "primary",
+        "description": "Integrate both candidates and run the contract-selected checks.",
+        "criterion_ids": ["AC-1"],
+        "inputs": ["service-candidate", "ui-candidate"],
+        "outputs": ["integrated-candidate"],
+        "isolation": "shared",
+        "write_scope": ["src", "tests"]
+      }
+    ],
+    "edges": [
+      { "from": "service-slice", "to": "integrate", "artifact": "service-candidate", "artifact_type": "candidate" },
+      { "from": "ui-slice", "to": "integrate", "artifact": "ui-candidate", "artifact_type": "candidate" }
+    ],
+    "convergence": {
+      "max_repair_rounds": 2,
+      "no_progress_limit": 2,
+      "dedupe_scope": "all-seen",
+      "required_failure": "block"
+    }
   },
   "risk_gate_version": 1,
   "risk_flags": ["api-contract", "ui-behavior", "visual"],

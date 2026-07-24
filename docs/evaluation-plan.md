@@ -6,6 +6,8 @@ Do not roll this framework out on confidence alone. Compare three configurations
 2. the original multi-skill/taxonomy design;
 3. the revised single-skill, direct-risk, verifier-oriented v1.
 
+Within each configuration, preserve the working baseline and change one prompt, tool, or reasoning variable at a time. Remove repeated instruction or irrelevant-tool groups before adding new scaffolding, then rerun the same tasks. Compare the current reasoning setting with one level lower; test higher settings only when representative outcomes justify their latency and cost. When programmatic tool calling is available, compare it with direct calls only for bounded deterministic reduction, and score both the structured program output and the final assistant response.
+
 ## Representative corpus
 
 Use 24 tasks across six repositories, keeping two repositories held out until the framework is frozen:
@@ -37,7 +39,7 @@ Initial rollout thresholds:
 
 ## Required ablations
 
-Measure one skill versus six, direct risks versus S/V/A policy, no scouting versus always scouting versus calibrated scouting, header-only versus nonce/backend correlation, same-agent versus protected verifier, narrow versus full evidence identity, no mixed environment versus shared real service, Stagehand versus Playwright acceptance, screenshot-presence versus structured independent review, Beads closure versus verifier closure, always-on versus first-retry traces, and Chrome MCP always available versus failure-only.
+Measure one skill versus six, outcome-first lean guidance versus duplicated process choreography, direct risks versus S/V/A policy, no scouting versus always scouting versus calibrated scouting, inherited reasoning baseline versus fixed role overrides, current reasoning versus one level lower, direct calls versus bounded programmatic reduction, sparse phase updates versus per-call narration, header-only versus nonce/backend correlation, same-agent versus protected verifier, narrow versus full evidence identity, no mixed environment versus shared real service, Stagehand versus Playwright acceptance, screenshot-presence versus structured independent review, Beads closure versus verifier closure, always-on versus first-retry traces, and Chrome MCP always available versus failure-only.
 
 For discovery/goal orchestration, include model-driven cases for a trivial direct task, a high-ambiguity scouted task, unavailable-subagent fallback, unavailable or unauthorized goal fallback, continuation with an existing goal, contradictory scout findings, prompt injection in scout evidence, scout timeout, and material user choice. Audit tool events and before/after workspace state. Measure requirement-defect recall, wrong assumptions, unnecessary questions, unnecessary-scout rate, goal/contract divergence, main-thread context use, latency, and token/cost overhead.
 
@@ -45,7 +47,7 @@ Keep a component only when it improves held-out outcomes or materially reduces o
 
 ## Executable pilot
 
-`evaluation/pilot-manifest.json` defines a 27-case mechanical pilot spanning discovery-contract consistency, canonical goal binding, mandatory post-research goal intent, direct-risk gate integrity, bounded continuation, current-attempt advisory review, distinct delivery authority, mock integrity, API compatibility, business-request provenance, test integrity, deployment identity, migration backfill, async correlation/postconditions, verifier authority, and approval. Run it with:
+`evaluation/pilot-manifest.json` defines a 31-case mechanical pilot spanning discovery-contract consistency, canonical goal binding, dependency-graph planning and authority boundaries, mandatory post-research goal intent, direct-risk gate integrity, bounded continuation, current-attempt advisory review, distinct delivery authority, mock integrity, API compatibility, business-request provenance, test integrity, deployment identity, migration backfill, async correlation/postconditions, verifier authority, and approval. Run it with:
 
 ```powershell
 npm run evaluate:pilot
